@@ -1,0 +1,55 @@
+--
+-- Pseudo-code of Test&Set mutual exclusion protocol
+--
+-- Loop: "Remainder Section"
+--   rs: repeat while test&set(locked);
+--       "Critical Section"
+--  cs: locked := false;
+--
+
+mod! LABEL {
+    [Label]
+    ops rs cs : -> Label {constr} .
+    eq (rs = cs) = false .
+}
+
+mod* PID {
+    [Pid]
+}
+
+mod* TAS {
+    pr(LABEL)
+    pr(PID)
+    [Sys]
+    op init : -> Sys {constr} .
+    op enter : Sys Pid -> Sys {constr} .
+    op exit : Sys Pid -> Sys {constr} .
+    op pc : Sys Pid -> Label .
+    op locked : Sys -> Bool .
+    var S : Sys .
+    vars P Q : Pid .
+    -- init
+    eq pc(init, P) = rs .
+    eq locked(init) = false .
+    -- enter
+    op c-enter : Sys Pid -> Bool .
+    eq c-enter(S, P) = (pc(S, P) = rs and not locked(S)) .
+    --
+    ceq pc(enter(S, P), Q) = (if P = Q then cs else pc(S, Q) fi) if c-enter(S, P) .
+    ceq locked(enter(S, P)) = true if c-enter(S, P) .
+    ceq enter(S, P) = S if not c-enter(S, P) .
+    -- exit
+    op c-exit : Sys Pid -> Bool .
+    eq c-exit(S, P) = (pc(S, P) = cs) .
+    --
+    ceq pc(exit(S, P), Q) = (if P = Q then rs else pc(S, Q) fi) if c-exit(S, P) .
+    ceq locked(exit(S, P)) = false if c-exit(S, P) .
+    ceq exit(S, P) = S if not c-exit(S, P) .
+    --
+    -- properties
+    --
+    op mutex : Sys Pid Pid -> Bool .
+    op inv1 : Sys Pid -> Bool .
+    eq mutex(S, P, Q) = (pc(S, P) = cs and pc(S, Q) = cs implies P = Q) .
+    eq inv1(S, P) = (pc(S, P) = cs implies locked(S)) .
+}
