@@ -1,14 +1,16 @@
 in tas.cafe
 
+--> base case
 open TAS .
     ops p q : -> Pid .
     red mutex(init, p, q) .
 close
 
+--> induction case for enter
+--> case 1.1.1.1
 open TAS .
     op s : -> Sys .
     ops p q r : -> Pid .
-    -- eq c-enter(s,r) = true .
     eq pc(s, r) = rs .
     eq locked(s) = false .
     eq p = r .
@@ -16,32 +18,58 @@ open TAS .
     red mutex(s, p, q) implies mutex(enter(s, r), p, q) .
 close
 
+--> case 1.1.1.2.1: needs inv1
 open TAS .
     op s : -> Sys .
     ops p q r : -> Pid .
-    -- eq c-enter(s,r) = true .
     eq pc(s, r) = rs .
     eq locked(s) = false .
     eq p = r .
     eq (q = r) = false .
+    eq pc(s, q) = cs .
     red inv1(s, q) implies mutex(s, p, q) implies mutex(enter(s, r), p, q) .
 close
 
+--> case 1.1.1.2.2
 open TAS .
     op s : -> Sys .
     ops p q r : -> Pid .
-    -- eq c-enter(s,r) = true .
+    eq pc(s, r) = rs .
+    eq locked(s) = false .
+    eq p = r .
+    eq (q = r) = false .
+    eq (pc(s,q) = cs) = false .
+    red mutex(s, p, q) implies mutex(enter(s, r), p, q) .
+close
+
+--> case 1.1.2.1.1: needs inv1
+open TAS .
+    op s : -> Sys .
+    ops p q r : -> Pid .
     eq pc(s, r) = rs .
     eq locked(s) = false .
     eq (p = r) = false .
     eq q = r .
+    eq pc(s, p) = cs .
     red inv1(s, p) implies mutex(s, p, q) implies mutex(enter(s, r), p, q) .
 close
 
+--> case 1.1.2.1.2
 open TAS .
     op s : -> Sys .
     ops p q r : -> Pid .
-    -- eq c-enter(s,r) = true .
+    eq pc(s, r) = rs .
+    eq locked(s) = false .
+    eq (p = r) = false .
+    eq q = r .
+    eq (pc(s, p) = cs) = false .
+    red mutex(s, p, q) implies mutex(enter(s, r), p, q) .
+close
+
+--> case 1.1.2.2
+open TAS .
+    op s : -> Sys .
+    ops p q r : -> Pid .
     eq pc(s, r) = rs .
     eq locked(s) = false .
     eq (p = r) = false .
@@ -49,45 +77,57 @@ open TAS .
     red mutex(s, p, q) implies mutex(enter(s, r), p, q) .
 close
 
+--> case 1.2
 open TAS .
     op s : -> Sys .
     ops p q r : -> Pid .
-    eq c-enter(s,r) = false .
+    eq pc(s, r) = rs .
+    eq locked(s) = true .
     red mutex(s, p, q) implies mutex(enter(s, r), p, q) .
 close
 
+--> case 2
 open TAS .
     op s : -> Sys .
     ops p q r : -> Pid .
-    -- eq c-exit(s, r) = true .
+    eq (pc(s, r) = rs) = false .
+    red mutex(s, p, q) implies mutex(enter(s, r), p, q) .
+close
+
+--> induction case for exit
+--> case 1.1
+open TAS .
+    op s : -> Sys .
+    ops p q r : -> Pid .
     eq pc(s, r) = cs .
     eq p = r .
     red mutex(s, p, q) implies mutex(exit(s, r), p, q) .
 close
 
+--> case 1.2.1
 open TAS .
     op s : -> Sys .
     ops p q r : -> Pid .
-    -- eq c-exit(s, r) = true .
     eq pc(s, r) = cs .
     eq (p = r) = false .
     eq q = r .
     red mutex(s, p, q) implies mutex(exit(s, r), p, q) .
 close
 
+--> case 1.2.2
 open TAS .
     op s : -> Sys .
     ops p q r : -> Pid .
-    -- eq c-exit(s, r) = true .
     eq pc(s, r) = cs .
     eq (p = r) = false .
     eq (q = r) = false .
     red mutex(s, p, q) implies mutex(exit(s, r), p, q) .
 close
 
+--> case 2
 open TAS .
     op s : -> Sys .
     ops p q r : -> Pid .
-    eq c-exit(s, r) = false .
+    eq (pc(s, r) = cs) = false .
     red mutex(s, p, q) implies mutex(exit(s, r), p, q) .
 close

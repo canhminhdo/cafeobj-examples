@@ -1,19 +1,24 @@
 in tas.cafe
 
+--> base case
 open TAS .
     op p : -> Pid .
     red inv1(init, p) .
 close
 
+--> induction case for enter
+--> case 1
 open TAS .
     op s : -> Sys .
     ops p r : -> Pid .
-    -- eq c-enter(s, r) = true .
+    -- eq c-enter(s, r) = true . <=> {
     eq pc(s, r) = rs .
     eq locked(s) = false .
+    -- }
     red inv1(s, p) implies inv1(enter(s, r), p) .
 close
 
+--> case 2
 open TAS .
     op s : -> Sys .
     ops p r : -> Pid .
@@ -21,24 +26,57 @@ open TAS .
     red inv1(s, p) implies inv1(enter(s, r), p) .
 close
 
+--> induction case for exit
+--> case 1.1
 open TAS .
     op s : -> Sys .
     ops p r : -> Pid .
-    -- eq c-exit(s, r) = true .
+    -- eq c-exit(s, r) = true . <=> {
     eq pc(s, r) = cs .
+    -- }
     eq p = r .
     red inv1(s, p) implies inv1(exit(s, r), p) .
 close
 
+--> case 1.2.1.1: needs mutex
 open TAS .
     op s : -> Sys .
     ops p r : -> Pid .
-    -- eq c-exit(s, r) = true .
+    -- eq c-exit(s, r) = true . <=> {
     eq pc(s, r) = cs .
+    -- }
     eq (p = r) = false .
+    eq locked(s) = true .
+    eq pc(s, p) = cs .
     red mutex(s, p, r) implies inv1(s, p) implies inv1(exit(s, r), p) .
 close
 
+--> case 1.2.1.2
+open TAS .
+    op s : -> Sys .
+    ops p r : -> Pid .
+    -- eq c-exit(s, r) = true . <=> {
+    eq pc(s, r) = cs .
+    -- }
+    eq (p = r) = false .
+    eq locked(s) = true .
+    eq (pc(s, p) = cs) = false .
+    red inv1(s, p) implies inv1(exit(s, r), p) .
+close
+
+--> case 1.2.2
+open TAS .
+    op s : -> Sys .
+    ops p r : -> Pid .
+    -- eq c-exit(s, r) = true . <=> {
+    eq pc(s, r) = cs .
+    -- }
+    eq (p = r) = false .
+    eq locked(s) = false .
+    red inv1(s, p) implies inv1(exit(s, r), p) .
+close
+
+--> case 2
 open TAS .
     op s : -> Sys .
     ops p r : -> Pid .
