@@ -1,0 +1,28 @@
+--> base case
+(true):Bool
+--> induction case for enter
+--> case 1.1.1.1
+(true):Bool
+--> case 1.1.1.2.1: needs inv1
+(true):Bool
+--> case 1.1.1.2.2
+(true):Bool
+--> case 1.1.2.1.1: needs inv1
+(true):Bool
+--> case 1.1.2.1.2
+(true):Bool
+--> case 1.1.2.2
+(true):Bool
+--> case 1.2
+(true):Bool
+--> case 2
+(true):Bool
+--> induction case for exit
+--> case 1.1
+(true):Bool
+--> case 1.2.1
+(true):Bool
+--> case 1.2.2
+(true):Bool
+--> case 2
+(true):Bool
