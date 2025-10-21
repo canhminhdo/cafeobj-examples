@@ -1,0 +1,57 @@
+in qlock.cafe
+
+--> base case
+open QLOCK .
+    op p : -> Pid .
+    red inv1(init, p) .
+close
+
+--> induction case for want
+--> case 1.1
+open QLOCK .
+    op s : -> Sys .
+    ops p r : -> Pid .
+    eq pc(s, r) = rs .
+    eq p = r .
+    red inv1(s, p) implies inv1(want(s, r), p) .
+close
+
+--> case 1.2.1.1
+open QLOCK .
+    op s : -> Sys .
+    ops p r : -> Pid .
+    eq pc(s, r) = rs .
+    eq (p = r) = false .
+    eq pc(s, p) = cs .
+    eq top(queue(s)) = p .
+    red inv1(s, p) implies inv1(want(s, r), p) .
+close
+
+--> case 1.2.1.2
+open QLOCK .
+    op s : -> Sys .
+    ops p r : -> Pid .
+    eq pc(s, r) = rs .
+    eq (p = r) = false .
+    eq pc(s, p) = cs .
+    eq (top(queue(s)) = p) = false .
+    red inv1(s, p) implies inv1(want(s, r), p) .
+close
+
+--> case 1.2.2
+open QLOCK .
+    op s : -> Sys .
+    ops p r : -> Pid .
+    eq pc(s, r) = rs .
+    eq (p = r) = false .
+    eq (pc(s, p) = cs) = false .
+    red inv1(s, p) implies inv1(want(s, r), p) .
+close
+
+--> case 2
+open QLOCK .
+    op s : -> Sys .
+    ops p r : -> Pid .
+    eq (pc(s, r) = rs) = false .
+    red inv1(s, p) implies inv1(want(s, r), p) .
+close

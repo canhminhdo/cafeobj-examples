@@ -1,0 +1,39 @@
+--> base case
+(true):Bool
+--> induction case for want
+--> case 1.1
+(true):Bool
+--> case 1.2.1
+(true):Bool
+--> case 1.2.2
+(true):Bool
+--> case 2
+(true):Bool
+--> induction case for try
+--> case 1.1.1.1.1
+(true):Bool
+--> case 1.1.1.1.2
+(true):Bool
+--> case 1.1.1.2.1
+(true):Bool
+--> case 1.1.1.2.2
+(true):Bool
+--> case 1.1.2.1.1
+(true):Bool
+--> case 1.1.2.1.2
+(true):Bool
+--> case 1.1.2.2
+(true):Bool
+--> case 1.2
+(true):Bool
+--> case 2
+(true):Bool
+--> induction case for exit
+--> case 1.1
+(true):Bool
+--> case 1.2.1
+(true):Bool
+--> case 1.2.2
+(true):Bool
+--> case 2
+(true):Bool

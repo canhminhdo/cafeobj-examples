@@ -1,0 +1,184 @@
+in qlock.cafe
+
+--> base case
+open QLOCK .
+    ops p q : -> Pid .
+    red mutex(init, p, q) .
+close
+
+--> induction case for want
+--> case 1.1
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = rs .
+    eq p = r .
+    red mutex(s, p, q) implies mutex(want(s, r), p, q) .
+close
+
+--> case 1.2.1
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = rs .
+    eq (p = r) = false .
+    eq q = r .
+    red mutex(s, p, q) implies mutex(want(s, r), p, q) .
+close
+
+--> case 1.2.2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = rs .
+    eq (p = r) = false .
+    eq (q = r) = false .
+    red mutex(s, p, q) implies mutex(want(s, r), p, q) .
+close
+
+--> case 2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq (pc(s, r) = rs) = false .
+    red mutex(s, p, q) implies mutex(want(s, r), p, q) .
+close
+
+--> induction case for try
+--> case 1.1.1.1.1
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = ws .
+    eq top(queue(s)) = r .
+    eq q = r .
+    eq p = r .
+    eq pc(s, p) = cs .
+    red mutex(s, p, q) implies mutex(try(s, r), p, q) .
+close
+
+--> case 1.1.1.1.2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = ws .
+    eq top(queue(s)) = r .
+    eq q = r .
+    eq p = r .
+    eq (pc(s, p) = cs) = false .
+    red mutex(s, p, q) implies mutex(try(s, r), p, q) .
+close
+
+--> case 1.1.1.2.1
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = ws .
+    eq top(queue(s)) = r .
+    eq q = r .
+    eq (p = r) = false .
+    eq pc(s, p) = cs .
+    red inv1(s, p) implies mutex(s, p, q) implies mutex(try(s, r), p, q) .
+close
+
+--> case 1.1.1.2.2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = ws .
+    eq top(queue(s)) = r .
+    eq q = r .
+    eq (p = r) = false .
+    eq (pc(s, p) = cs) = false .
+    red mutex(s, p, q) implies mutex(try(s, r), p, q) .
+close
+
+--> case 1.1.2.1.1
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = ws .
+    eq top(queue(s)) = r .
+    eq (q = r) = false .
+    eq p = r .
+    eq pc(s, q) = cs .
+    red inv1(s, q) implies mutex(s, p, q) implies mutex(try(s, r), p, q) .
+close
+
+--> case 1.1.2.1.2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = ws .
+    eq top(queue(s)) = r .
+    eq (q = r) = false .
+    eq p = r .
+    eq (pc(s, q) = cs) = false .
+    red mutex(s, p, q) implies mutex(try(s, r), p, q) .
+close
+
+--> case 1.1.2.2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = ws .
+    eq top(queue(s)) = r .
+    eq (q = r) = false .
+    eq (p = r) = false .
+    red mutex(s, p, q) implies mutex(try(s, r), p, q) .
+close
+
+--> case 1.2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = ws .
+    eq (top(queue(s)) = r) = false .
+    red mutex(s, p, q) implies mutex(try(s, r), p, q) .
+close
+
+--> case 2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq (pc(s, r) = ws) = false .
+    red mutex(s, p, q) implies mutex(try(s, r), p, q) .
+close
+
+--> induction case for exit
+--> case 1.1
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = cs .
+    eq p = r .
+    red mutex(s, p, q) implies mutex(exit(s, r), p, q) .
+close
+
+--> case 1.2.1
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = cs .
+    eq (p = r) = false .
+    eq q = r .
+    red mutex(s, p, q) implies mutex(exit(s, r), p, q) .
+close
+
+--> case 1.2.2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq pc(s, r) = cs .
+    eq (p = r) = false .
+    eq (q = r) = false .
+    red mutex(s, p, q) implies mutex(exit(s, r), p, q) .
+close
+
+--> case 2
+open QLOCK .
+    op s : -> Sys .
+    ops p q r : -> Pid .
+    eq (pc(s, r) = cs) = false .
+    red mutex(s, p, q) implies mutex(exit(s, r), p, q) .
+close
