@@ -1,0 +1,195 @@
+-- 
+-- Needham-Schroeder-Lowe Public-Key Authentication Protocol
+-- (NSLPK Protocol)
+--
+-- Msg1 p --> q : E_q(n_p, p)
+-- Msg2 q --> p : E_p(n_p, n_q, q)
+-- Msg3 p --> q : E_q(n_q)
+-- 
+
+-- 
+-- One of the principals is the intruder denoted by constant intruder.
+-- 
+mod! PRIN {
+  [Prin]
+  op intruder : -> Prin {constr}
+}
+
+-- 
+-- Unguessable random numbers for nonces
+-- 
+mod! RAND {
+  [Rand]
+}
+
+-- 
+-- Given principals p, q and random value r, term n(p, q, r) denotes a
+-- nonce created by principal p for authenticating p to principal q,
+-- where r makes the nonce globally unique and unguessable.
+-- 
+mod! NONCE {
+    pr(PRIN + RAND)
+    [Nonce]
+    op n : Prin Prin Rand -> Nonce {constr}
+    op creator : Nonce -> Prin
+    op forwhom : Nonce -> Prin
+    op rand : Nonce -> Rand
+    vars P P' Q Q' : Prin .
+    vars R R' : Rand .
+    eq creator(n(P, Q, R)) = P .
+    eq forwhom(n(P, Q, R)) = Q .
+    eq rand(n(P, Q, R)) = R .
+    eq (n(P, Q, R) = n(P', Q', R')) = (P = P' and Q = Q' and R = R') .
+}
+
+-- 
+-- Given principals p, q and nonce n_p, term enc1(q,n_p,p) denotes
+-- cipher E_q(n_p, p), where nonce n_p and principal p encrypted with
+-- principal q's public key.
+-- 
+mod! CIPHER1 {
+    pr(PRIN + NONCE)
+    [Cipher1]
+    op enc1 : Prin Nonce Prin -> Cipher1 {constr}
+    op key : Cipher1 -> Prin
+    op nonce : Cipher1 -> Nonce
+    op prin : Cipher1 -> Prin
+    vars P P' Q Q' : Prin .
+    vars N N' : Nonce .
+    eq key(enc1(Q, N, P)) = Q .
+    eq nonce(enc1(Q, N, P)) = N .
+    eq prin(enc1(Q, N, P)) = P .
+    eq (enc1(Q, N, P) = enc1(Q', N', P')) = (Q = Q' and N = N' and P = P') .
+}
+
+-- 
+-- Given principals p, q and nonces n_p, n_q term enc2(p, n_p, n_q, q)
+-- denotes cipher E_p(n_p, n_q, q), where nonces n_p, n_q and principal q
+-- encrypted with principal p's public key.
+-- 
+mod! CIPHER2 {
+    pr(PRIN + NONCE)
+    [Cipher2]
+    op enc2 : Prin Nonce Nonce Prin -> Cipher2 {constr}
+    op key : Cipher2 -> Prin .
+    op nonce1 : Cipher2 -> Nonce .
+    op nonce2 : Cipher2 -> Nonce .
+    op prin : Cipher2 -> Prin .
+    vars P P' Q Q' : Prin .
+    vars N1 N2 N1' N2' : Nonce .
+    eq key(enc2(P, N1, N2, Q)) = P .
+    eq nonce1(enc2(P, N1, N2, Q)) = N1 .
+    eq nonce2(enc2(P, N1, N2, Q)) = N2 .
+    eq prin(enc2(P, N1, N2, Q)) = Q .
+    eq (enc2(P, N1, N2, Q) = enc2(P', N1', N2', Q')) = (P = P' and N1 = N1' and N2 = N2' and Q = Q') .
+}
+
+-- 
+-- Given principals p,q and nonce n_p, term enc1(q,n_p,p) denotes
+-- cipher E_q(n_q), where nonce n_q encrypted with
+-- principal q's public key.
+-- 
+mod! CIPHER3 {
+    pr(PRIN + NONCE)
+    [Cipher3]
+    op enc3 : Prin Nonce -> Cipher3 {constr}
+    op key : Cipher3 -> Prin
+    op nonce : Cipher3 -> Nonce
+    vars Q Q' : Prin .
+    vars N N' : Nonce .
+    eq key(enc3(Q, N)) = Q .
+    eq nonce(enc3(Q, N)) = N .
+    eq (enc3(Q, N) = enc3(Q', N')) = (Q = Q' and N = N') .
+}
+
+-- 
+-- Given principals c,s,r and cipher{i} for i = 1,2,3,
+-- mi(c,s,r,ei) denotes a message created by principal c,
+-- but it seems to be sent by principal s to principal r.
+-- 
+-- c may be the intruder, and c may be different from s.
+-- If so, the message is faked by the intruder.
+-- c: creator
+-- s: seeming sender
+-- r: receiver
+-- 
+mod! MESSAGE {
+    pr(CIPHER1 + CIPHER2 + CIPHER3)
+    [Msg]
+    --      creator sender receiver
+    op m1 : Prin Prin Prin Cipher1 -> Msg {constr}
+    op m2 : Prin Prin Prin Cipher2 -> Msg {constr}
+    op m3 : Prin Prin Prin Cipher3 -> Msg {constr}
+    -- 
+    op m1? : Msg -> Bool
+    op m2? : Msg -> Bool
+    op m3? : Msg -> Bool
+    -- 
+    op creator : Msg -> Prin
+    op sender : Msg -> Prin
+    op receiver : Msg -> Prin
+    op cipher1 : Msg -> Cipher1
+    op cipher2 : Msg -> Cipher2
+    op cipher3 : Msg -> Cipher3
+    -- 
+    vars M M1 M2 : Msg 
+    vars C C' S S' R R' : Prin
+    vars E1 E1' : Cipher1
+    vars E2 E2' : Cipher2
+    vars E3 E3' : Cipher3
+    -- 
+    eq m1?(m1(C, S, R, E1)) = true .
+    eq m1?(m2(C, S, R, E2)) = false .
+    eq m1?(m3(C, S, R, E3)) = false .
+    eq m2?(m1(C, S, R, E1)) = false .
+    eq m2?(m2(C, S, R, E2)) = true .
+    eq m2?(m3(C, S, R, E3)) = false .
+    eq m3?(m1(C, S, R, E1)) = false .
+    eq m3?(m2(C, S, R, E2)) = false .
+    eq m3?(m3(C, S, R, E3)) = true .
+    -- 
+    eq creator(m1(C, S, R, E1)) = C .
+    eq creator(m2(C, S, R, E2)) = C .
+    eq creator(m3(C, S, R, E3)) = C .
+    eq sender(m1(C, S, R, E1)) = S .
+    eq sender(m2(C, S, R, E2)) = S .
+    eq sender(m3(C, S, R, E3)) = S .
+    eq receiver(m1(C, S, R, E1)) = R .
+    eq receiver(m2(C, S, R, E2)) = R .
+    eq receiver(m3(C, S, R, E3)) = R .
+    eq cipher1(m1(C, S, R, E1)) = E1 .
+    eq cipher2(m2(C, S, R, E2)) = E2 .
+    eq cipher3(m3(C, S, R, E3)) = E3 .
+    -- 
+    -- [TODO] need to be revised for proving
+    eq (m1(C, S, R, E1) = m2(C', S', R', E2')) = false .
+    eq (m1(C, S, R, E1) = m3(C', S', R', E3')) = false .
+    eq (m2(C, S, R, E2) = m3(C', S', R', E3')) = false .
+    eq (m1(C, S, R, E1) = m1(C', S', R', E1')) = (C = C' and S = S' and R = R' and E1 = E1') .
+    eq (m2(C, S, R, E2) = m2(C', S', R', E2')) = (C = C' and S = S' and R = R' and E2 = E2') .
+    eq (m3(C, S, R, E3) = m3(C', S', R', E3')) = (C = C' and S = S' and R = R' and E3 = E3') .
+    -- [TODO] need to be revised for proving
+}
+
+mod! BAG(D :: TRIV) {
+    [Elt.D < Bag]
+    op void : -> Bag {constr}
+    op _,_ : Bag Bag -> Bag {constr assoc comm id: void}
+    op _\in_ : Elt.D Bag -> Bool
+    var B : Bag
+    vars E E' : Elt.D
+    eq E \in void = false .
+    eq E \in (E', B) = (E = E') or (E \in B) .
+}
+
+mod! SET(D :: TRIV) {
+    [Elt.D < Set]
+    op empty : -> Set {constr}
+    op __ : Set Set -> Set {constr assoc comm id: empty}
+    op _\in_ : Elt.D Set -> Bool
+    var S : Set
+    vars E E' : Elt.D
+    eq E E = E .
+    eq E \in empty = false .
+    eq E \in (E' S) = (E = E') or (E \in S) .
+}
