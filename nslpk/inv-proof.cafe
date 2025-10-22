@@ -1,0 +1,99 @@
+in nslpk.cafe
+
+--> base case
+open INV .
+    op n : -> Nonce .
+    red inv(init, n) .
+close
+
+--> induction case for sdm1
+--> case 1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p q : -> Prin .
+    op r : -> Rand .
+    eq (r \in ur(s)) = true .
+    red inv(s, n) implies inv(sdm1(s, p, q, r), n) .
+close
+
+--> case 2.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p q : -> Prin .
+    op r : -> Rand .
+    eq (r \in ur(s)) = false .
+    eq creator(n) = intruder .
+    red inv(s, n) implies inv(sdm1(s, p, q, r), n) .
+close
+
+--> case 2.2.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p q : -> Prin .
+    op r : -> Rand .
+    eq (r \in ur(s)) = false .
+    eq (creator(n) = intruder) = false .
+    eq forwhom(n) = intruder .
+    red inv(s, n) implies inv(sdm1(s, p, q, r), n) .
+close
+
+--> case 2.2.2.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p q : -> Prin .
+    op r : -> Rand .
+    eq (r \in ur(s)) = false .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = true .
+    red inv(s, n) implies inv(sdm1(s, p, q, r), n) .
+close
+
+--> case 2.2.2.2.1.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p q : -> Prin .
+    op r : -> Rand .
+    eq (r \in ur(s)) = false .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq q = intruder .
+    eq n = n(p, intruder, r) .
+    red inv(s, n) implies inv(sdm1(s, p, q, r), n) .
+close
+
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p q : -> Prin .
+    op r : -> Rand .
+    eq (r \in ur(s)) = false .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq q = intruder .
+    eq (n = n(p, intruder, r)) = false .
+    red inv(s, n) implies inv(sdm1(s, p, q, r), n) .
+close
+
+--> case 2.2.2.2.2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p q : -> Prin .
+    op r : -> Rand .
+    eq (r \in ur(s)) = false .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq (q = intruder) = false .
+    red inv(s, n) implies inv(sdm1(s, p, q, r), n) .
+close
+
+eof

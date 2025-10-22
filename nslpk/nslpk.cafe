@@ -109,8 +109,8 @@ mod! CIPHER3 {
 -- 
 -- c may be the intruder, and c may be different from s.
 -- If so, the message is faked by the intruder.
--- c: creator
--- s: seeming sender
+-- c: (actual) creator - cannot be forged by the intruder
+-- s: (seeming) sender
 -- r: receiver
 -- 
 mod! MESSAGE {
@@ -192,4 +192,219 @@ mod! SET(D :: TRIV) {
     eq E E = E .
     eq E \in empty = false .
     eq E \in (E' S) = (E = E') or (E \in S) .
+}
+
+mod! COLLECTION(D :: TRIV) {
+    [Elt.D < Collection]
+    op _\in_ : Elt.D Collection -> Bool
+}
+
+view Msg from TRIV to MESSAGE {
+    sort Elt -> Msg
+}
+
+view Nonce from TRIV to NONCE {
+    sort Elt -> Nonce
+}
+
+view Cipher1 from TRIV to CIPHER1 {
+    sort Elt -> Cipher1
+}
+
+view Cipher2 from TRIV to CIPHER2 {
+    sort Elt -> Cipher2
+}
+
+view Cipher3 from TRIV to CIPHER3 {
+    sort Elt -> Cipher3
+}
+
+view Rand from TRIV to RAND {
+    sort Elt -> Rand
+}
+
+-- 
+-- the network is the bag of messages, which can be regarded as part of the intruder.
+-- 
+mod! NETWORK {
+    pr(PRIN + NONCE)
+    pr(CIPHER1 + CIPHER2 + CIPHER3)
+    pr(BAG(D <= Msg) * { sort Bag -> Network })
+    pr(COLLECTION(D <= Nonce) * { sort Collection -> ColNonce })
+    pr(COLLECTION(D <= Cipher1) * { sort Collection -> ColCipher1 })
+    pr(COLLECTION(D <= Cipher2) * { sort Collection -> ColCipher2 })
+    pr(COLLECTION(D <= Cipher3) * { sort Collection -> ColCipher3 })
+    -- 
+    op cnonce : Network -> ColNonce
+    op cenc1 : Network -> ColCipher1
+    op cenc2 : Network -> ColCipher2
+    op cenc3 : Network -> ColCipher3
+    -- 
+    var NW : Network
+    var N : Nonce
+    var M : Msg
+    var E1 : Cipher1 .
+    var E2 : Cipher2 .
+    var E3 : Cipher3 .
+    -- 
+    eq N \in cnonce(void) = (creator(N) = intruder) .
+    ceq N \in cnonce(M, NW) = true
+        if m1?(M) and key(cipher1(M)) = intruder and nonce(cipher1(M)) = N .
+    ceq N \in cnonce(M, NW) = true
+        if m2?(M) and key(cipher2(M)) = intruder and (nonce1(cipher2(M)) = N or nonce2(cipher2(M)) = N) .
+    ceq N \in cnonce(M, NW) = true
+        if m3?(M) and key(cipher3(M)) = intruder and nonce(cipher3(M)) = N .
+    ceq N \in cnonce(M, NW) = N \in cnonce(NW)
+        if not (m1?(M) and key(cipher1(M)) = intruder and nonce(cipher1(M)) = N) and
+           not (m2?(M) and key(cipher2(M)) = intruder and (nonce1(cipher2(M)) = N or nonce2(cipher2(M)) = N)) and
+           not (m3?(M) and key(cipher3(M)) = intruder and nonce(cipher3(M)) = N) .
+
+    eq E1 \in cenc1(void) = false .
+    ceq E1 \in cenc1(M, NW) = true
+        if m1?(M) and not(key(cipher1(M)) = intruder) and E1 = cipher1(M) .
+    ceq E1 \in cenc1(M, NW) = E1 \in cenc1(NW)
+        if not (m1?(M) and not(key(cipher1(M)) = intruder) and E1 = cipher1(M)) .
+
+    eq E2 \in cenc2(void) = false .
+    ceq E2 \in cenc2(M, NW) = true
+        if m2?(M) and not (key(cipher2(M)) = intruder) and E2 = cipher2(M) .
+    ceq E2 \in cenc2(M, NW) = E2 \in cenc2(NW)
+        if not (m2?(M) and not (key(cipher2(M)) = intruder) and E2 = cipher2(M)) .
+
+    eq E3 \in cenc3(void) = false .
+    ceq E3 \in cenc3(M, NW) = true
+        if m3?(M) and not (key(cipher3(M)) = intruder) and E3 = cipher3(M) .
+    ceq E3 \in cenc3(M, NW) = E3 \in cenc3(NW)
+        if not (m3?(M) and not (key(cipher3(M)) = intruder) and E3 = cipher3(M)) .
+}
+
+mod* NSLPK {
+    pr(NETWORK)
+    pr(SET(D <= Rand) * { sort Set -> URand })
+    [Sys]
+    -- initial states
+    op init : -> Sys {constr}
+    -- transitions
+    -- sending messages according to the protocol
+    op sdm1 : Sys Prin Prin Rand -> Sys {constr}
+    op sdm2 : Sys Rand Prin Prin Prin Cipher1 -> Sys {constr}
+    op sdm3 : Sys Prin Prin Prin Rand Cipher2 -> Sys {constr}
+    -- faking messages based on the gleaned info
+    op fkm11 : Sys Prin Prin Cipher1 -> Sys {constr}
+    op fkm12 : Sys Prin Prin Nonce -> Sys {constr}
+    op fkm21 : Sys Prin Prin Cipher2 -> Sys {constr}
+    op fkm22 : Sys Prin Prin Nonce Nonce -> Sys {constr}
+    op fkm31 : Sys Prin Prin Cipher3 -> Sys {constr}
+    op fkm32 : Sys Prin Prin Nonce -> Sys {constr}
+    -- observation functions
+    op ur : Sys -> URand -- the set of used random numbers
+    op nw : Sys -> Network
+    -- 
+    var S : Sys
+    var M : Msg
+    var R : Rand
+    var E1 : Cipher1
+    var E2 : Cipher2
+    var E3 : Cipher3
+    vars N N1 N2 : Nonce
+    vars P Q P2 Q2 : Prin
+    -- 
+    -- for initial states
+    eq ur(init) = empty .
+    eq nw(init) = void .
+    -- for sdm1
+    op c-sdm1 : Sys Prin Prin Rand -> Bool
+    eq c-sdm1(S, P, Q, R) = not (R \in ur(S)) .
+    -- 
+    ceq ur(sdm1(S, P, Q, R)) = R ur(S) if c-sdm1(S, P, Q, R) .
+    ceq nw(sdm1(S, P, Q, R)) = m1(P, P, Q, enc1(Q, n(P, Q, R), P)), nw(S)
+        if c-sdm1(S, P, Q, R) .
+    ceq sdm1(S, P, Q, R) = S if not c-sdm1(S, P, Q, R) .
+
+    -- for sdm2
+    op c-sdm2 : Sys Rand Prin Prin Prin Cipher1 -> Bool
+    eq c-sdm2(S, R, P, P2, Q, E1) 
+        = (m1(P2, P, Q, E1) \in nw(S) and key(E1) = Q and 
+          prin(E1) = P and not (R \in ur(S))) .
+    -- 
+    ceq ur(sdm2(S, R, P, P2, Q, E1)) = R ur(S) if c-sdm2(S, R, P, P2, Q, E1) .
+    ceq nw(sdm2(S, R, P, P2, Q, E1)) = m2(Q, Q, P, enc2(P, nonce(E1), n(Q, P, R), Q)), nw(S)
+        if c-sdm2(S, R, P, P2, Q, E1) .
+    ceq sdm2(S, R, P, P2, Q, E1) = S if not c-sdm2(S, R, P, P2, Q, E1) .
+
+    -- for sdm3
+    op c-sdm3 : Sys Prin Prin Prin Rand Cipher2 -> Bool
+    eq c-sdm3(S, P, Q, Q2, R, E2)
+        = m1(P, P, Q, enc1(Q, n(P, Q, R), P)) \in nw(S) and
+          m2(Q2, Q, P, E2) \in nw(S) and key(E2) = P and
+          prin(E2) = Q and nonce1(E2) = n(P, Q, R) .
+    -- 
+    eq ur(sdm3(S, P, Q, Q2, R, E2)) = ur(S) .
+    ceq nw(sdm3(S, P, Q, Q2, R, E2)) = m3(P, P, Q, enc3(Q, nonce2(E2))), nw(S)
+        if c-sdm3(S, P, Q, Q2, R, E2) .
+    ceq sdm3(S, P, Q, Q2, R, E2) = S if not c-sdm3(S, P, Q, Q2, R, E2) .
+
+    -- for fkm11
+    op c-fkm11 : Sys Prin Prin Cipher1 -> Bool
+    eq c-fkm11(S, P, Q, E1) = E1 \in cenc1(nw(S)) .
+    -- 
+    eq ur(fkm11(S, P, Q, E1)) = ur(S) .
+    ceq nw(fkm11(S, P, Q, E1)) = m1(intruder, P, Q, E1), nw(S)
+        if c-fkm11(S, P, Q, E1) .
+    ceq fkm11(S, P, Q, E1) = S if not c-fkm11(S, P, Q, E1) .
+
+    -- for fkm12
+    op c-fkm12 : Sys Prin Prin Nonce -> Bool
+    eq c-fkm12(S, P, Q, N) = N \in cnonce(nw(S)) .
+    -- 
+    eq ur(fkm12(S, P, Q, N)) = ur(S) .
+    ceq nw(fkm12(S, P, Q, N)) = m1(intruder, P, Q, enc1(Q, N, P)), nw(S)
+        if c-fkm12(S, P, Q, N) .
+    ceq fkm12(S, P, Q, N) = S if not c-fkm12(S, P, Q, N) .
+
+    -- for fkm21
+    op c-fkm21 : Sys Prin Prin Cipher2 -> Bool
+    eq c-fkm21(S, P, Q, E2) = E2 \in cenc2(nw(S)) .
+    -- 
+    eq  ur(fkm21(S, P, Q, E2)) = ur(S) .
+    ceq nw(fkm21(S, P, Q, E2)) = m2(intruder, P, Q, E2), nw(S) 
+        if c-fkm21(S, P, Q, E2) .
+    ceq fkm21(S, P, Q, E2)     = S if not c-fkm21(S, P, Q, E2) .
+
+    -- for fkm22
+    op c-fkm22 : Sys Prin Prin Nonce Nonce -> Bool
+    eq c-fkm22(S, P, Q, N1, N2) = N1 \in cnonce(nw(S)) and N2 \in cnonce(nw(S)) .
+    -- 
+    eq ur(fkm22(S, P, Q, N1, N2)) = ur(S) .
+    ceq nw(fkm22(S, P, Q, N1, N2)) = m2(intruder, P, Q, enc2(Q, N1, N2, P)), nw(S)
+        if c-fkm22(S, P, Q, N1, N2) .
+    ceq fkm22(S, P, Q, N1, N2) = S if not c-fkm22(S, P, Q, N1, N2) .
+
+    -- for fkm31
+    op c-fkm31 : Sys Prin Prin Cipher3 -> Bool
+    eq c-fkm31(S, P, Q, E3) = E3 \in cenc3(nw(S)) .
+    -- 
+    eq ur(fkm31(S, P, Q, E3)) = ur(S) .
+    ceq nw(fkm31(S, P, Q, E3)) = m3(intruder, P, Q, E3), nw(S)
+        if c-fkm31(S, P, Q, E3) .
+    ceq fkm31(S, P, Q, E3) = S if not c-fkm31(S, P, Q, E3) .
+
+    -- for fkm32
+    op c-fkm32 : Sys Prin Prin Nonce -> Bool
+    eq c-fkm32(S, P, Q, N) = N \in cnonce(nw(S)) .
+    -- 
+    eq ur(fkm32(S, P, Q, N)) = ur(S) .
+    ceq nw(fkm32(S, P, Q, N)) = m3(intruder, P, Q, enc3(Q,N)), nw(S)
+        if c-fkm32(S, P, Q, N) .
+    ceq fkm32(S, P, Q, N) = S if not c-fkm32(S, P, Q, N) .
+}
+
+mod INV {
+    pr(NSLPK)
+    op inv : Sys Nonce -> Bool
+    -- 
+    var S : Sys
+    var N : Nonce
+    -- 
+    eq inv(S, N) = N \in cnonce(nw(S)) implies (creator(N) = intruder or forwhom(N) = intruder) .
 }
