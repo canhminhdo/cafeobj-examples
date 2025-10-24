@@ -276,6 +276,15 @@ mod! NETWORK {
         if m3?(M) and not (key(cipher3(M)) = intruder) and E3 = cipher3(M) .
     ceq E3 \in cenc3(M, NW) = E3 \in cenc3(NW)
         if not (m3?(M) and not (key(cipher3(M)) = intruder) and E3 = cipher3(M)) .
+    
+    -- TODO: prove it
+    op lm1 : Msg Network -> Bool
+    eq lm1(M, NW) = (M \in NW and m1?(M) and not(nonce(cipher1(M)) \in cnonce(NW)))
+                     implies 
+                     not(key(cipher1(M)) = intruder) .
+    -- TODO: prove it
+    op lm2 : Cipher1 Msg Network -> Bool
+    eq lm2(E1, M, NW) = (E1 \in cenc1(M) and M \in NW) implies E1 \in cenc1(NW) .
 }
 
 mod* NSLPK {
@@ -401,10 +410,16 @@ mod* NSLPK {
 
 mod INV {
     pr(NSLPK)
-    op inv : Sys Nonce -> Bool
     -- 
     var S : Sys
     var N : Nonce
+    var E1 : Cipher1
     -- 
+    op inv : Sys Nonce -> Bool
     eq inv(S, N) = N \in cnonce(nw(S)) implies (creator(N) = intruder or forwhom(N) = intruder) .
+    -- TODO: prove it
+    op inv1 : Sys Cipher1 -> Bool
+    eq inv1(S, E1) = (E1 \in cenc1(nw(S)) and prin(E1) = intruder)
+                      implies
+                      nonce(E1) \in cnonce(nw(S)) .
 }

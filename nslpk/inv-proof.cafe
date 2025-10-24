@@ -96,4 +96,278 @@ open INV .
     red inv(s, n) implies inv(sdm1(s, p, q, r), n) .
 close
 
-eof
+--> induction case for sdm2
+--> case 1.1.1.1.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq creator(n) = intruder .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq forwhom(n) = intruder .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.2.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = true .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.2.2.1.1.1.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq p = intruder .
+    eq (m1(p2, intruder, q, e1) \in nw(s)) = true .
+    eq nonce(e1) = n .
+    -- up to here, return FALSE
+    eq (e1 \in cenc1(nw(s))) = true .
+    --> NEED: lemma inv1
+    red inv1(s, e1) implies inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.2.2.1.1.1.2.1.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq p = intruder .
+    eq (m1(p2, intruder, q, e1) \in nw(s)) = true .
+    eq nonce(e1) = n .
+    -- up to here, return FALSE
+    eq (e1 \in cenc1(nw(s))) = false .
+    eq q = intruder .
+    eq (m1(p2, intruder, intruder, e1) \in nw(s)) = true .
+    --> NEED: lemma lm1
+    red lm1(m1(p2, intruder, q, e1), nw(s)) implies inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.2.2.1.1.1.2.1.2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq p = intruder .
+    eq (m1(p2, intruder, q, e1) \in nw(s)) = true .
+    eq nonce(e1) = n .
+    -- up to here, return FALSE
+    eq (e1 \in cenc1(nw(s))) = false .
+    eq q = intruder .
+    eq (m1(p2, intruder, intruder, e1) \in nw(s)) = false .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.2.2.1.1.1.2.2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq p = intruder .
+    eq (m1(p2, intruder, q, e1) \in nw(s)) = true .
+    eq nonce(e1) = n .
+    -- up to here, return FALSE
+    eq (e1 \in cenc1(nw(s))) = false .
+    eq (q = intruder) = false .
+    --> NEED: lemma lm2
+    red lm2(e1, m1(p2, intruder, q, e1), nw(s)) implies inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.2.2.1.1.2.1
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq p = intruder .
+    eq (m1(p2, intruder, q, e1) \in nw(s)) = true .
+    eq (nonce(e1) = n) = false .
+    eq n = n(q, intruder, r) .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.2.2.1.1.2.2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq p = intruder .
+    eq (m1(p2, intruder, q, e1) \in nw(s)) = true .
+    eq (nonce(e1) = n) = false .
+    eq (n(q, intruder, r) = n) = false .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.2.2.1.2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq p = intruder .
+    eq (m1(p2, intruder, q, e1) \in nw(s)) = false .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.1.2.2.2.2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = true .
+    eq (creator(n) = intruder) = false .
+    eq (forwhom(n) = intruder) = false .
+    eq (n \in cnonce(nw(s))) = false .
+    eq (p = intruder) = false .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.1.2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = false .
+    eq (m1(p2, p, q, e1) \in nw(s)) = false .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.1.2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq key(e1) = q .
+    eq (r \in ur(s)) = true .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 1.2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq prin(e1) = p .
+    eq (key(e1) = q) = false .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> case 2
+open INV .
+    op s : -> Sys .
+    op n : -> Nonce .
+    ops p p2 q : -> Prin .
+    op r : -> Rand .
+    op e1 : -> Cipher1 .
+    eq (prin(e1) = p) = false .
+    red inv(s, n) implies inv(sdm2(s, r, p, p2, q, e1), n) .
+close
+
+--> TODO: induction case for sdm3
