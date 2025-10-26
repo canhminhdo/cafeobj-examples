@@ -1,0 +1,81 @@
+mod! PRIN {
+    [Prin]
+    op intruder : -> Prin {constr}
+}
+
+mod! RAND principal-sort Rand {
+    [Rand]
+}
+
+mod! KEY principal-sort Key {
+    [Key]
+    ops 0 1 : -> Key {constr}
+    eq (0 = 1) = false .
+}
+
+mod! BASIS principal-sort Basis {
+    [Basis]
+    ops + x : -> Basis {constr}
+    eq (+ = x) = false .
+}
+
+mod! QUBIT {
+    pr(KEY + BASIS)
+    [Qubit]
+    op qubit : Key Basis -> Qubit {constr}
+    vars K K' : Key
+    vars B B' : Basis
+    eq (qubit(K, B) = qubit(K', B')) = (K = K' and B = B') .
+}
+
+mod! ACK {
+    [Ack]
+    ops ok notOk : -> Ack {constr}
+    eq (ok = notOk) = false .
+}
+
+mod! SET(D :: TRIV) {
+    [Elt.D < Set]
+    op empty : -> Set {constr}
+    op __ : Set Set -> Set {constr assoc comm id: empty}
+    op _\in_ : Elt.D Set -> Bool
+    var S : Set
+    vars E E' : Elt.D
+    eq E E = E .
+    eq E \in empty = false .
+    eq E \in (E' S) = (E = E') or (E \in S) .
+}
+
+mod! COLLECTION(D :: TRIV) {
+    [Elt.D < Collection]
+    op _\in_ : Elt.D Collection -> Bool
+}
+
+mod! KNOWLEDGE {
+    pr(3TUPLE(RAND,KEY,BASIS) * {
+        sort 3Tuple -> Knowledge,
+        op << _ ; _ ; _ >> -> (_,_,_),
+        op 1*_ -> rand,
+        op 2*_ -> key,
+        op 3*_ -> basis
+    })
+    vars R R' : Rand
+    vars K K' : Key
+    vars B B' : Basis
+    eq ((R,K,B) = (R',K',B')) = (R = R' and K = K' and B = B') .
+}
+
+view TRIV2KNOWLEDGE from TRIV to KNOWLEDGE {
+    sort Elt -> Knowledge
+}
+
+mod! KNOWLEDGESET {
+    pr(SET(D <= TRIV2KNOWLEDGE) * {sort Set -> KnowledgeSet})
+    vars KL KL' : Knowledge
+    var KLS : KnowledgeSet
+    eq (KL \in empty) = false .
+    eq (KL \in (KL' KLS)) = (rand(KL) = rand(KL') and key(KL) = key(KL') and basis(KL) = basis(KL')) or (KL \in KLS) .
+}
+
+eof
+pr(SET(D <= Rand) * { sort Set -> URand })

@@ -11,15 +11,15 @@
 -- One of the principals is the intruder denoted by constant intruder.
 -- 
 mod! PRIN {
-  [Prin]
-  op intruder : -> Prin {constr}
+    [Prin]
+    op intruder : -> Prin {constr}
 }
 
 -- 
 -- Unguessable random numbers for nonces
 -- 
 mod! RAND {
-  [Rand]
+    [Rand]
 }
 
 -- 
