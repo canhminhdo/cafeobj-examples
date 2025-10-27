@@ -1,4 +1,4 @@
-mod! PRIN {
+mod! PRIN principal-sort Prin {
     [Prin]
     op intruder : -> Prin {constr}
 }
@@ -28,7 +28,7 @@ mod! QUBIT {
     eq (qubit(K, B) = qubit(K', B')) = (K = K' and B = B') .
 }
 
-mod! ACK {
+mod! ACK principal-sort Ack {
     [Ack]
     ops ok notOk : -> Ack {constr}
     eq (ok = notOk) = false .
@@ -46,36 +46,212 @@ mod! SET(D :: TRIV) {
     eq E \in (E' S) = (E = E') or (E \in S) .
 }
 
+mod! KEY-KNOWLEDGE principal-sort KeyKL {
+    pr(3TUPLE(PRIN,RAND,KEY) * {
+        sort 3Tuple -> KeyKL,
+        op << _ ; _ ; _ >> -> (_,_,_),
+        op 1*_ -> prin,
+        op 2*_ -> rand,
+        op 3*_ -> key
+    })
+    vars P P' : Prin
+    vars R R' : Rand
+    vars K K' : Key
+    eq ((P,R,K) = (P',R',K')) = (P = P' and R = R' and K = K') .
+}
+
+mod! BASIS-KNOWLEDGE principal-sort BasisKL {
+    pr(3TUPLE(PRIN,RAND,BASIS) * {
+        sort 3Tuple -> BasisKL,
+        op << _ ; _ ; _ >> -> (_,_,_),
+        op 1*_ -> prin,
+        op 2*_ -> rand,
+        op 3*_ -> basis
+    })
+    vars P P' : Prin
+    vars R R' : Rand
+    vars B B' : Basis
+    eq ((P,R,B) = (P',R',B')) = (P = P' and R = R' and B = B') .
+}
+
+mod! ACK-KNOWLEDGE principal-sort AckKL {
+    pr(3TUPLE(PRIN,RAND,ACK) * {
+        sort 3Tuple -> AckKL,
+        op << _ ; _ ; _ >> -> (_,_,_),
+        op 1*_ -> prin,
+        op 2*_ -> rand,
+        op 3*_ -> ack
+    })
+    vars P P' : Prin
+    vars R R' : Rand
+    vars A A' : Ack
+    eq ((P,R,A) = (P',R',A')) = (P = P' and R = R' and A = A') .
+}
+
+mod! KNOWLEDGE principal-sort Knowledge {
+    pr(PRIN + RAND + KEY + BASIS)
+    [Knowledge]
+    op (_,_,_,_,_) : Prin Prin Rand Key Basis -> Knowledge
+    op sender : Knowledge -> Prin
+    op receiver : Knowledge -> Prin
+    op rand : Knowledge -> Rand
+    op key : Knowledge -> Key
+    op basis : Knowledge -> Basis
+    -- 
+    vars P P' Q Q' : Prin
+    vars R R' : Rand
+    vars K K' : Key
+    vars B B' : Basis
+    -- 
+    eq ((P,Q,R,K,B) = (P',Q',R',K',B')) = (P = P' and Q = Q' and R = R' and K = K' and B = B') .
+}
+
+mod! KEY-KNOWLEDGE-SET {
+    pr(SET(KEY-KNOWLEDGE) * {sort Set -> KeyKLSet})
+    vars KL KL' : KeyKL
+    var KLS : KeyKLSet
+    eq (KL \in empty) = false .
+    eq (KL \in (KL' KLS)) = (prin(KL) = prin(KL') and rand(KL) = rand(KL') and 
+                             key(KL) = key(KL')) or (KL \in KLS) .
+}
+
+mod! BASIS-KNOWLEDGE-SET {
+    pr(SET(BASIS-KNOWLEDGE) * {sort Set -> BasisKLSet})
+    vars KL KL' : BasisKL
+    var KLS : BasisKLSet
+    eq (KL \in empty) = false .
+    eq (KL \in (KL' KLS)) = (prin(KL) = prin(KL') and rand(KL) = rand(KL') and 
+                             basis(KL) = basis(KL')) or (KL \in KLS) .
+}
+
+mod! ACK-KNOWLEDGE-SET {
+    pr(SET(ACK-KNOWLEDGE) * {sort Set -> AckKLSet})
+    vars KL KL' : AckKL
+    var KLS : AckKLSet
+    eq (KL \in empty) = false .
+    eq (KL \in (KL' KLS)) = (prin(KL) = prin(KL') and rand(KL) = rand(KL') and 
+                             ack(KL) = ack(KL')) or (KL \in KLS) .
+}
+
+mod! KNOWLEDGESET {
+    pr(SET(KNOWLEDGE) * {sort Set -> KnowledgeSet})
+    vars KL KL' : Knowledge
+    var KLS : KnowledgeSet
+    eq (KL \in empty) = false .
+    eq (KL \in (KL' KLS)) = (sender(KL) = sender(KL') and receiver(KL) = receiver(KL') and rand(KL) = rand(KL') and key(KL) = key(KL') and basis(KL) = basis(KL')) or (KL \in KLS) .
+}
+
+mod! Q-MESSAGE principal-sort QMsg {
+    pr(PRIN + RAND + QUBIT)
+    [QMsg]
+    op qm : Prin Prin Prin Rand Qubit -> QMsg {constr}
+}
+
+mod! MESSAGE principal-sort Msg {
+    pr(PRIN + RAND + QUBIT + ACK)
+    [Msg]
+    -- creator sender receiver
+    op m1 : Prin Prin Prin Rand Qubit -> Msg {constr}
+    op m2 : Prin Prin Prin Rand Basis -> Msg {constr}
+    op m3 : Prin Prin Prin Rand Ack -> Msg {constr}
+}
+
+mod! BAG(D :: TRIV) {
+    [Elt.D < Bag]
+    op void : -> Bag {constr}
+    op _,_ : Bag Bag -> Bag {constr assoc comm id: void}
+    op _\in_ : Elt.D Bag -> Bool
+    var B : Bag
+    vars E E' : Elt.D
+    eq E \in void = false .
+    eq E \in (E', B) = (E = E') or (E \in B) .
+}
+
 mod! COLLECTION(D :: TRIV) {
     [Elt.D < Collection]
     op _\in_ : Elt.D Collection -> Bool
 }
 
-mod! KNOWLEDGE {
-    pr(3TUPLE(RAND,KEY,BASIS) * {
-        sort 3Tuple -> Knowledge,
-        op << _ ; _ ; _ >> -> (_,_,_),
-        op 1*_ -> rand,
-        op 2*_ -> key,
-        op 3*_ -> basis
-    })
-    vars R R' : Rand
-    vars K K' : Key
-    vars B B' : Basis
-    eq ((R,K,B) = (R',K',B')) = (R = R' and K = K' and B = B') .
+mod! NETWORK {
+    pr(BAG(MESSAGE) * { sort Bag -> Network })
 }
 
-view TRIV2KNOWLEDGE from TRIV to KNOWLEDGE {
-    sort Elt -> Knowledge
+mod! CELL(E :: TRIV) {
+    [Elt.E < Cell]
+    op e : -> Cell {constr}
+    op isEmp : Cell -> Bool
+    op hd : Cell -> Elt.E
+    op tl : Cell -> Cell
+    var E : Elt.E
+    eq (e = E) = false .
+    eq isEmp(e) = true .
+    eq isEmp(E) = false .
+    eq hd(E) = E .
+    eq tl(E) = e .
 }
 
-mod! KNOWLEDGESET {
-    pr(SET(D <= TRIV2KNOWLEDGE) * {sort Set -> KnowledgeSet})
-    vars KL KL' : Knowledge
-    var KLS : KnowledgeSet
-    eq (KL \in empty) = false .
-    eq (KL \in (KL' KLS)) = (rand(KL) = rand(KL') and key(KL) = key(KL') and basis(KL) = basis(KL')) or (KL \in KLS) .
+mod! BB84 {
+    pr(NETWORK)
+    pr(CELL(Q-MESSAGE) * { sort Cell -> QNetwork })
+    pr(KEY-KNOWLEDGE-SET + BASIS-KNOWLEDGE-SET + ACK-KNOWLEDGE-SET)
+    pr(SET(RAND) * { sort Set -> URand})
+    [Sys]
+    -- initial states
+    op init : -> Sys {constr}
+    -- transitions
+    op sdm1 : Sys Prin Prin Rand Key Basis -> Sys {constr}
+    op sdm2 : Sys Prin Prin Rand Basis -> Sys {constr}
+    -- observation function
+    op ur : Sys -> URand
+    op nw : Sys -> Network
+    op keys : Sys -> KeyKLSet
+    op bases : Sys -> BasisKLSet
+    op acks : Sys -> AckKLSet
+    op qnw : Sys -> QNetwork
+    -- 
+    var S : Sys
+    var M : Msg
+    var R : Rand
+    vars P Q : Prin
+    var K : Key
+    var B : Basis
+    -- 
+    -- for initial states
+    eq ur(init) = empty .
+    eq nw(init) = void .
+    eq keys(init) = empty .
+    eq bases(init) = empty .
+    eq acks(init) = empty .
+    -- for sdm1
+    op c-sdm1 : Sys Prin Prin Rand Key Basis -> Bool
+    eq c-sdm1(S, P, Q, R, K, B) = not(R \in ur(S)) and isEmp(qnw(S)) .
+    -- 
+    ceq ur(sdm1(S, P, Q, R, K, B)) = R ur(S) if c-sdm1(S, P, Q, R, K, B) .
+    eq nw(sdm1(S, P, Q, R, K, B)) = nw(S) .
+    ceq keys(sdm1(S, P, Q, R, K, B)) = (P,R,K) keys(S) if c-sdm1(S,P,Q,R,K,B) .
+    ceq bases(sdm1(S, P, Q, R, K, B)) = (P,R,B) bases(S) if c-sdm1(S,P,Q,R,K,B) .
+    eq acks(sdm1(S, P, Q, R, K, B)) = acks(S) .
+    ceq qnw(sdm1(S, P, Q, R, K, B)) = qm(P,P,Q,R,qubit(K,B)) if c-sdm1(S, P, Q, R, K, B) .
+    ceq sdm1(S, P, Q, R, K, B) = S if not c-sdm1(S, P, Q, R, K, B) .
 }
+
+eof
+
+mod! CELL(E :: TRIV) {
+    [Elt.E < Cell]
+    op e : -> Cell {constr}
+    op isEmp : Cell -> Bool
+    op hd : Cell -> Elt.E
+    op tl : Cell -> Cell
+    var E : Elt.E
+    eq (e = E) = false .
+    eq isEmp(e) = true .
+    eq isEmp(E) = false .
+    eq hd(E) = E .
+    eq tl(E) = e .
+}
+
+mod!
 
 eof
 pr(SET(D <= Rand) * { sort Set -> URand })
