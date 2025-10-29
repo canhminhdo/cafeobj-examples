@@ -23,9 +23,14 @@ mod! QUBIT {
     pr(KEY + BASIS)
     [Qubit]
     op qubit : Key Basis -> Qubit {constr}
+    op k : Qubit -> Key
+    op b : Qubit -> Basis
+    op measure : Qubit Basis -> Key .
     vars K K' : Key
     vars B B' : Basis
     eq (qubit(K, B) = qubit(K', B')) = (K = K' and B = B') .
+    eq k(qubit(K,B)) = K .
+    eq b(qubit(K,B)) = B .
 }
 
 mod! ACK principal-sort Ack {
@@ -107,30 +112,77 @@ mod! KNOWLEDGE principal-sort Knowledge {
 }
 
 mod! KEY-KNOWLEDGE-SET {
+    pr(RAND + PRIN)
     pr(SET(KEY-KNOWLEDGE) * {sort Set -> KeyKLSet})
+    [Key ErrKey < Key&Err]
+    -- 
+    op errK : -> ErrKey {constr}
+    -- 
     vars KL KL' : KeyKL
     var KLS : KeyKLSet
+    var P : Prin
+    var R : Rand
+    -- 
     eq (KL \in empty) = false .
     eq (KL \in (KL' KLS)) = (prin(KL) = prin(KL') and rand(KL) = rand(KL') and 
                              key(KL) = key(KL')) or (KL \in KLS) .
+    -- 
+    op hasKey : KeyKLSet Prin Rand -> Bool
+    eq hasKey(empty,P,R) = false .
+    eq hasKey(KL KLS,P,R) = (prin(KL) = P and rand(KL) = R) or hasKey(KLS,P,R) .
+    -- 
+    op key : KeyKLSet Prin Rand -> Key&Err
+    eq key(empty,P,R) = errK .
+    eq key(KL KLS,P,R) = (if (prin(KL) = P and rand(KL) = R) then key(KL) else key(KLS,P,R) fi) .
+    -- lemmas
+    op k-lm1 : KeyKLSet Prin Rand -> Bool
+    eq k-lm1(KLS,P,R) = hasKey(KLS,P,R) implies not(key(KLS,P,R) = errK) .
 }
 
 mod! BASIS-KNOWLEDGE-SET {
+    pr(RAND + PRIN)
     pr(SET(BASIS-KNOWLEDGE) * {sort Set -> BasisKLSet})
+    [Basis ErrBasis < Basis&Err]
+    -- 
+    op errB : -> ErrBasis {constr}
+    -- 
     vars KL KL' : BasisKL
     var KLS : BasisKLSet
+    var P : Prin
+    var R : Rand
+    -- 
     eq (KL \in empty) = false .
     eq (KL \in (KL' KLS)) = (prin(KL) = prin(KL') and rand(KL) = rand(KL') and 
                              basis(KL) = basis(KL')) or (KL \in KLS) .
+    -- 
+    op hasBasis : BasisKLSet Prin Rand -> Bool
+    eq hasBasis(empty,P,R) = false .
+    eq hasBasis(KL KLS,P,R) = (prin(KL) = P and rand(KL) = R) or hasBasis(KLS,P,R) .
+    -- 
+    op basis : BasisKLSet Prin Rand -> Basis&Err
+    eq basis(empty,P,R) = errB .
+    eq basis(KL KLS,P,R) = (if (prin(KL) = P and rand(KL) = R) then basis(KL) else basis(KLS,P,R) fi) .
+    -- lemmas
+    op b-lm1 : BasisKLSet Prin Rand -> Bool
+    eq b-lm1(KLS,P,R) = hasBasis(KLS,P,R) implies not(basis(KLS,P,R) = errB) .
 }
 
 mod! ACK-KNOWLEDGE-SET {
+    pr(RAND + PRIN)
     pr(SET(ACK-KNOWLEDGE) * {sort Set -> AckKLSet})
+    -- 
     vars KL KL' : AckKL
     var KLS : AckKLSet
+    var P : Prin
+    var R : Rand
+    -- 
     eq (KL \in empty) = false .
     eq (KL \in (KL' KLS)) = (prin(KL) = prin(KL') and rand(KL) = rand(KL') and 
                              ack(KL) = ack(KL')) or (KL \in KLS) .
+    -- 
+    op hasAck : AckKLSet Prin Rand -> Bool
+    eq hasAck(empty,P,R) = false .
+    eq hasAck(KL KLS,P,R) = (prin(KL) = P and rand(KL) = R) or hasAck(KLS,P,R) .
 }
 
 mod! KNOWLEDGESET {
@@ -151,9 +203,8 @@ mod! MESSAGE principal-sort Msg {
     pr(PRIN + RAND + QUBIT + ACK)
     [Msg]
     -- creator sender receiver
-    op m1 : Prin Prin Prin Rand Qubit -> Msg {constr}
-    op m2 : Prin Prin Prin Rand Basis -> Msg {constr}
-    op m3 : Prin Prin Prin Rand Ack -> Msg {constr}
+    op m1 : Prin Prin Prin Rand Basis -> Msg {constr}
+    op m2 : Prin Prin Prin Rand Ack -> Msg {constr}
 }
 
 mod! BAG(D :: TRIV) {
@@ -178,16 +229,16 @@ mod! NETWORK {
 
 mod! CELL(E :: TRIV) {
     [Elt.E < Cell]
-    op e : -> Cell {constr}
+    op emp : -> Cell {constr}
     op isEmp : Cell -> Bool
     op hd : Cell -> Elt.E
     op tl : Cell -> Cell
     var E : Elt.E
-    eq (e = E) = false .
-    eq isEmp(e) = true .
+    eq (emp = E) = false .
+    eq isEmp(emp) = true .
     eq isEmp(E) = false .
     eq hd(E) = E .
-    eq tl(E) = e .
+    eq tl(E) = emp .
 }
 
 mod! BB84 {
@@ -199,8 +250,11 @@ mod! BB84 {
     -- initial states
     op init : -> Sys {constr}
     -- transitions
-    op sdm1 : Sys Prin Prin Rand Key Basis -> Sys {constr}
-    op sdm2 : Sys Prin Prin Rand Basis -> Sys {constr}
+    op sdqm : Sys Prin Prin Rand Key Basis -> Sys {constr}
+    op sdm1 : Sys Prin Prin Prin Rand Qubit Basis -> Sys {constr}
+    op sdm2 : Sys Prin Prin Prin Rand Basis Basis -> Sys {constr}
+    op cfm : Sys Prin Prin Prin Rand Ack -> Sys {constr}
+    op fkqm : Sys Prin Prin Prin Rand Qubit Basis -> Sys {constr}
     -- observation function
     op ur : Sys -> URand
     op nw : Sys -> Network
@@ -212,46 +266,108 @@ mod! BB84 {
     var S : Sys
     var M : Msg
     var R : Rand
-    vars P Q : Prin
+    vars P Q P2 Q2 : Prin
     var K : Key
-    var B : Basis
-    -- 
+    vars B B' : Basis
+    var KB : Qubit
+    var A : Ack
+
     -- for initial states
     eq ur(init) = empty .
     eq nw(init) = void .
     eq keys(init) = empty .
     eq bases(init) = empty .
     eq acks(init) = empty .
-    -- for sdm1
-    op c-sdm1 : Sys Prin Prin Rand Key Basis -> Bool
-    eq c-sdm1(S, P, Q, R, K, B) = not(R \in ur(S)) and isEmp(qnw(S)) .
+    eq qnw(init) = emp .
+
+    -- for sdqm
+    op c-sdqm : Sys Prin Prin Rand Key Basis -> Bool
+    eq c-sdqm(S,P,Q,R,K,B) = not(R \in ur(S)) and isEmp(qnw(S)) and 
+                              not(hasKey(keys(S),P,R)) and not(hasBasis(bases(S),P,R)) .
     -- 
-    ceq ur(sdm1(S, P, Q, R, K, B)) = R ur(S) if c-sdm1(S, P, Q, R, K, B) .
-    eq nw(sdm1(S, P, Q, R, K, B)) = nw(S) .
-    ceq keys(sdm1(S, P, Q, R, K, B)) = (P,R,K) keys(S) if c-sdm1(S,P,Q,R,K,B) .
-    ceq bases(sdm1(S, P, Q, R, K, B)) = (P,R,B) bases(S) if c-sdm1(S,P,Q,R,K,B) .
-    eq acks(sdm1(S, P, Q, R, K, B)) = acks(S) .
-    ceq qnw(sdm1(S, P, Q, R, K, B)) = qm(P,P,Q,R,qubit(K,B)) if c-sdm1(S, P, Q, R, K, B) .
-    ceq sdm1(S, P, Q, R, K, B) = S if not c-sdm1(S, P, Q, R, K, B) .
+    ceq ur(sdqm(S,P,Q,R,K,B)) = R ur(S) if c-sdqm(S,P,Q,R,K,B) .
+    ceq keys(sdqm(S,P,Q,R,K,B)) = (P,R,K) keys(S) if c-sdqm(S,P,Q,R,K,B) .
+    ceq bases(sdqm(S,P,Q,R,K,B)) = (P,R,B) bases(S) if c-sdqm(S,P,Q,R,K,B) .
+    ceq qnw(sdqm(S,P,Q,R,K,B)) = qm(P,P,Q,R,qubit(K,B)) if c-sdqm(S,P,Q,R,K,B) .
+    eq nw(sdqm(S,P,Q,R,K,B)) = nw(S) .
+    eq acks(sdqm(S,P,Q,R,K,B)) = acks(S) .
+    ceq sdqm(S,P,Q,R,K,B) = S if not c-sdqm(S,P,Q,R,K,B) .
+    
+    -- for sdm1
+    op c-sdm1 : Sys Prin Prin Prin Rand Qubit Basis -> Bool
+    eq c-sdm1(S,P,P2,Q,R,KB,B) = not(isEmp(qnw(S))) and (hd(qnw(S)) = qm(P2,P,Q,R,KB)) and
+                                 not(hasBasis(bases(S),Q,R)) . -- TODO: (Q,R,B') \in bases(S) may still hold
+    -- 
+    eq ur(sdm1(S,P,P2,Q,R,KB,B)) = ur(S) .
+    ceq keys(sdm1(S,P,P2,Q,R,KB,B)) = (if B = b(KB) then (Q,R,k(KB)) else (Q,R,measure(KB,B)) fi) keys(S) if c-sdm1(S,P,P2,Q,R,KB,B) .
+    ceq bases(sdm1(S,P,P2,Q,R,KB,B)) = (Q,R,B) bases(S) if c-sdm1(S,P,P2,Q,R,KB,B) .
+    ceq qnw(sdm1(S,P,P2,Q,R,KB,B)) = tl(qnw(S)) if c-sdm1(S,P,P2,Q,R,KB,B) .
+    ceq nw(sdm1(S,P,P2,Q,R,KB,B)) = m1(Q,Q,P,R,B), nw(S) if c-sdm1(S,P,P2,Q,R,KB,B) .
+    eq acks(sdm1(S,P,P2,Q,R,KB,B)) = acks(S) .
+    ceq sdm1(S,P,P2,Q,R,KB,B) = S if not c-sdm1(S,P,P2,Q,R,KB,B) .
+
+    -- for sdm2
+    op c-sdm2 : Sys Prin Prin Prin Rand Basis Basis -> Bool
+    eq c-sdm2(S,P,Q,Q2,R,B,B') = hasKey(keys(S),P,R) and (P,R,B) \in bases(S) and m1(Q2,Q,P,R,B') \in nw(S) and
+                                 not(hasAck(acks(S),P,R)) .
+    -- 
+    eq ur(sdm2(S,P,Q,Q2,R,B,B')) = ur(S) .
+    eq keys(sdm2(S,P,Q,Q2,R,B,B')) = keys(S) .
+    eq bases(sdm2(S,P,Q,Q2,R,B,B')) = bases(S) .
+    eq qnw(sdm2(S,P,Q,Q2,R,B,B')) = qnw(S) .
+    ceq nw(sdm2(S,P,Q,Q2,R,B,B')) = (if B = B' then m2(P,P,Q,R,ok) else m2(P,P,Q,R,notOk) fi), nw(S) if c-sdm2(S,P,Q,Q2,R,B,B') .
+    ceq acks(sdm2(S,P,Q,Q2,R,B,B')) = (if B = B' then (P,R,ok) else (P,R,notOk) fi) acks(S) if c-sdm2(S,P,Q,Q2,R,B,B') .
+    ceq sdm2(S,P,Q,Q2,R,B,B') = S if not c-sdm2(S,P,Q,Q2,R,B,B') .
+    
+    -- for cfm
+    op c-cfm : Sys Prin Prin Prin Rand Ack -> Bool
+    eq c-cfm(S,P,P2,Q,R,A) = m2(P2,P,Q,R,A) \in nw(S) and not(hasAck(acks(S),Q,R)) .
+    -- 
+    eq ur(cfm(S,P,P2,Q,R,A)) = ur(S) .
+    eq keys(cfm(S,P,P2,Q,R,A)) = keys(S) .
+    eq bases(cfm(S,P,P2,Q,R,A)) = bases(S) .
+    eq qnw(cfm(S,P,P2,Q,R,A)) = qnw(S) .
+    eq nw(cfm(S,P,P2,Q,R,A)) = nw(S) .
+    ceq acks(cfm(S,P,P2,Q,R,A)) = (Q,R,A) acks(S) if c-cfm(S,P,P2,Q,R,A) .
+    ceq cfm(S,P,P2,Q,R,A) = S if not c-cfm(S,P,P2,Q,R,A) .
+
+    -- for fkqm
+    op c-fkqm : Sys Prin Prin Prin Rand Qubit Basis -> Bool
+    eq c-fkqm(S,P,P2,Q,R,KB,B) = not(isEmp(qnw(S))) and (hd(qnw(S)) = qm(P2,P,Q,R,KB)) and not(hasBasis(bases(S),intruder,R)) .
+    -- 
+    eq ur(fkqm(S,P,P2,Q,R,KB,B)) = ur(S) .
+    ceq keys(fkqm(S,P,P2,Q,R,KB,B)) = (if (b(KB) = B) then (intruder,R,k(KB)) else (intruder,R,measure(KB,B)) fi) keys(S) if c-fkqm(S,P,P2,Q,R,KB,B) .
+    ceq bases(fkqm(S,P,P2,Q,R,KB,B)) = (intruder,R,B) bases(S) if c-fkqm(S,P,P2,Q,R,KB,B) .
+    ceq qnw(fkqm(S,P,P2,Q,R,KB,B)) = (if (b(KB) = B) then qm(intruder,P,Q,R,KB) else qm(intruder,P,Q,R,qubit(measure(KB,B),B)) fi) if c-fkqm(S,P,P2,Q,R,KB,B) .
+    eq nw(fkqm(S,P,P2,Q,R,KB,B)) = nw(S) .
+    eq acks(fkqm(S,P,P2,Q,R,KB,B)) = acks(S) .
+    ceq fkqm(S,P,P2,Q,R,KB,B) = S if not c-fkqm(S,P,P2,Q,R,KB,B) .
 }
 
-eof
-
-mod! CELL(E :: TRIV) {
-    [Elt.E < Cell]
-    op e : -> Cell {constr}
-    op isEmp : Cell -> Bool
-    op hd : Cell -> Elt.E
-    op tl : Cell -> Cell
-    var E : Elt.E
-    eq (e = E) = false .
-    eq isEmp(e) = true .
-    eq isEmp(E) = false .
-    eq hd(E) = E .
-    eq tl(E) = e .
+mod INV {
+    pr(BB84)
+    -- 
+    var S : Sys
+    var R : Rand
+    vars P Q : Prin
+    -- 
+    op isComplete : Sys Prin Prin Rand -> Bool
+    eq isComplete(S,P,Q,R) = hasKey(keys(S),P,R) and hasBasis(bases(S),P,R) and hasAck(acks(S),P,R) and
+                             hasKey(keys(S),Q,R) and hasBasis(bases(S),Q,R) and hasAck(acks(S),Q,R) .
+    op evePresent : Sys Rand -> Bool
+    eq evePresent(S,R) = hasKey(keys(S),intruder,R) and hasBasis(bases(S),intruder,R) .
+    -- 
+    op sameBasis : Sys Prin Prin Rand -> Bool
+    eq sameBasis(S,P,Q,R) = (basis(bases(S),P,R) = basis(bases(S),Q,R)) .
+    -- 
+    op sameKey : Sys Prin Prin Rand -> Bool
+    eq sameKey(S,P,Q,R) = (key(keys(S),P,R) = key(keys(S),Q,R)) .
+    -- 
+    op inv1 : Sys Prin Prin Rand -> Bool
+    eq inv1(S,P,Q,R) = (isComplete(S,P,Q,R) and sameBasis(S,P,Q,R) and sameKey(S,P,Q,R))
+                       implies evePresent(S,R) .
+    -- 
+    op inv2 : Sys Prin Prin Rand -> Bool
+    eq inv2(S,P,Q,R) = (isComplete(S,P,Q,R) and sameBasis(S,P,Q,R) and not(evePresent(S,R)))
+                       implies sameKey(S,P,Q,R) .
 }
-
-mod!
-
-eof
-pr(SET(D <= Rand) * { sort Set -> URand })
