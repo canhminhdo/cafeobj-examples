@@ -185,14 +185,6 @@ mod! ACK-KNOWLEDGE-SET {
     eq hasAck(KL KLS,P,R) = (prin(KL) = P and rand(KL) = R) or hasAck(KLS,P,R) .
 }
 
-mod! KNOWLEDGESET {
-    pr(SET(KNOWLEDGE) * {sort Set -> KnowledgeSet})
-    vars KL KL' : Knowledge
-    var KLS : KnowledgeSet
-    eq (KL \in empty) = false .
-    eq (KL \in (KL' KLS)) = (sender(KL) = sender(KL') and receiver(KL) = receiver(KL') and rand(KL) = rand(KL') and key(KL) = key(KL') and basis(KL) = basis(KL')) or (KL \in KLS) .
-}
-
 mod! Q-MESSAGE principal-sort QMsg {
     pr(PRIN + RAND + QUBIT)
     [QMsg]
