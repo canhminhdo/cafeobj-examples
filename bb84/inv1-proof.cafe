@@ -1,0 +1,529 @@
+in bb84.cafe
+
+--> base case
+open INV .
+    ops p q : -> Prin .
+    op r : -> Rand .
+    red inv1(init,p,q,r) .
+close
+
+--> induction case for sdqm
+--> case 1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = true .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = true .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = true .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = true .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.1.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = false .
+    eq hasAck(acks(s),p,r) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.1.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = false .
+    eq hasAck(acks(s),p,r) = true .
+    eq hasAck(acks(s),q,r) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.1.2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = false .
+    eq hasAck(acks(s),p,r) = true .
+    eq hasAck(acks(s),q,r) = true .
+    eq hasKey(keys(s),q,r) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.1.2.2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = false .
+    eq hasAck(acks(s),p,r) = true .
+    eq hasAck(acks(s),q,r) = true .
+    eq hasKey(keys(s),q,r) = true .
+    eq (b = basis(bases(s),q,r)) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.1.2.2.2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = false .
+    eq hasAck(acks(s),p,r) = true .
+    eq hasAck(acks(s),q,r) = true .
+    eq hasKey(keys(s),q,r) = true .
+    eq (b = basis(bases(s),q,r)) = true .
+    eq (k = key(keys(s),q,r)) = true .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.1.2.2.2.2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = false .
+    eq hasAck(acks(s),p,r) = true .
+    eq hasAck(acks(s),q,r) = true .
+    eq hasKey(keys(s),q,r) = true .
+    eq (b = basis(bases(s),q,r)) = true .
+    eq (k = key(keys(s),q,r)) = false .
+    eq (p2 = intruder) = true .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.1.2.2.2.2.2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = false .
+    eq hasAck(acks(s),p,r) = true .
+    eq hasAck(acks(s),q,r) = true .
+    eq hasKey(keys(s),q,r) = true .
+    eq (b = basis(bases(s),q,r)) = true .
+    eq (k = key(keys(s),q,r)) = false .
+    eq (p2 = intruder) = false .
+    eq hasBasis(bases(s),intruder,r) = false .
+    --> use lemmas: inv3
+    red inv3(s,p,r) implies inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.1.2.2.2.2.2.2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = false .
+    eq hasAck(acks(s),p,r) = true .
+    eq hasAck(acks(s),q,r) = true .
+    eq hasKey(keys(s),q,r) = true .
+    eq (b = basis(bases(s),q,r)) = true .
+    eq (k = key(keys(s),q,r)) = false .
+    eq (p2 = intruder) = false .
+    eq hasBasis(bases(s),intruder,r) = true .
+    eq hasKey(keys(s),intruder,r) = false .
+    --> use lemmas: inv3
+    red inv3(s,p,r) implies inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.1.2.2.2.2.2.2.2.2
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = false .
+    eq hasAck(acks(s),p,r) = true .
+    eq hasAck(acks(s),q,r) = true .
+    eq hasKey(keys(s),q,r) = true .
+    eq (b = basis(bases(s),q,r)) = true .
+    eq (k = key(keys(s),q,r)) = false .
+    eq (p2 = intruder) = false .
+    eq hasBasis(bases(s),intruder,r) = true .
+    eq hasKey(keys(s),intruder,r) = true .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.1.2.2.2
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasBasis(bases(s),q,r) = true .
+    eq hasBasis(bases(s),p,r) = true .
+    red b-lm2(bases(s),p,r,p2,r2) implies inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.1.2
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = true .
+    eq (r = r2) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = false .
+    eq (r = r2) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = false .
+    eq (r = r2) = true .
+    eq (q = p2) = true .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.2.2.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = true .
+    eq (q = q2) = false .
+    eq (r = r2) = true .
+    eq (q = p2) = false .
+    eq hasAck(acks(s),p,r) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.1.2.2.2.2
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq p = p2 .
+    eq (q = q2) = false .
+    eq r = r2 .
+    eq (q = p2) = false .
+    eq hasAck(acks(s),p,r) = true .
+    red inv3(s,p,r) implies inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.2.1.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = false .
+    eq q = q2 .
+    eq (r = r2) = false .
+    red inv3(s,p,r) implies inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+--> case 2.2.2.2.2.1.2.1
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = false .
+    eq q = q2 .
+    eq r = r2 .
+    eq hasKey(keys(s),p,r) = true .
+    eq p2 = q2 .
+    red inv3(s,p,r) implies inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+eof
+
+--> case 2.2.2.2.2.1.2.2
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = false .
+    eq q = q2 .
+    eq r = r2 .
+    eq hasKey(keys(s),p,r) = false .
+    red inv3(s,p,r) implies inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close
+
+eof
+
+--> case 2.2.2.2.2.2
+open INV .
+    op s : -> Sys .
+    ops p q p2 q2 : -> Prin .
+    ops r r2 : -> Rand .
+    op k : -> Key .
+    op b : -> Basis .
+    eq (r2 \in ur(s)) = false .
+    eq (isEmp(qnw(s))) = true .
+    eq qnw(s) = emp . -- TODO: additional equation
+    eq hasKey(keys(s),p2,r2) = false .
+    eq hasBasis(bases(s),p2,r2) = false .
+    eq (p = p2) = false .
+    eq (q = q2) = false .
+    red inv1(s,p,q,r) implies inv1(sdqm(s,p2,q2,r2,k,b),p,q,r) .
+close

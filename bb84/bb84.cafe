@@ -39,13 +39,26 @@ mod! ACK principal-sort Ack {
     eq (ok = notOk) = false .
 }
 
+mod! TUPLE3(X :: TRIV, Y :: TRIV, Z :: TRIV) {
+    [Tuple3]
+    op (_,_,_) : Elt.X Elt.Y Elt.Z -> Tuple3 {constr}
+    op 1* : Tuple3 -> Elt.X
+    op 2* : Tuple3 -> Elt.Y
+    op 3* : Tuple3 -> Elt.Z
+    var X : Elt.X
+    var Y : Elt.Y
+    var Z : Elt.Z
+    eq 1*((X,Y,Z)) = X .
+    eq 2*((X,Y,Z)) = Y .
+    eq 3*((X,Y,Z)) = Z .
+}
+
 mod! KEY-KNOWLEDGE principal-sort KeyKL {
-    pr(3TUPLE(PRIN,RAND,KEY) * {
-        sort 3Tuple -> KeyKL,
-        op << _ ; _ ; _ >> -> (_,_,_),
-        op 1*_ -> prin,
-        op 2*_ -> rand,
-        op 3*_ -> key
+    pr(TUPLE3(PRIN,RAND,KEY) * {
+        sort Tuple3 -> KeyKL,
+        op 1* -> prin,
+        op 2* -> rand,
+        op 3* -> key
     })
     vars P P' : Prin
     vars R R' : Rand
@@ -54,12 +67,11 @@ mod! KEY-KNOWLEDGE principal-sort KeyKL {
 }
 
 mod! BASIS-KNOWLEDGE principal-sort BasisKL {
-    pr(3TUPLE(PRIN,RAND,BASIS) * {
-        sort 3Tuple -> BasisKL,
-        op << _ ; _ ; _ >> -> (_,_,_),
-        op 1*_ -> prin,
-        op 2*_ -> rand,
-        op 3*_ -> basis
+    pr(TUPLE3(PRIN,RAND,BASIS) * {
+        sort Tuple3 -> BasisKL,
+        op 1* -> prin,
+        op 2* -> rand,
+        op 3* -> basis
     })
     vars P P' : Prin
     vars R R' : Rand
@@ -68,12 +80,11 @@ mod! BASIS-KNOWLEDGE principal-sort BasisKL {
 }
 
 mod! ACK-KNOWLEDGE principal-sort AckKL {
-    pr(3TUPLE(PRIN,RAND,ACK) * {
-        sort 3Tuple -> AckKL,
-        op << _ ; _ ; _ >> -> (_,_,_),
-        op 1*_ -> prin,
-        op 2*_ -> rand,
-        op 3*_ -> ack
+    pr(TUPLE3(PRIN,RAND,ACK) * {
+        sort Tuple3 -> AckKL,
+        op 1* -> prin,
+        op 2* -> rand,
+        op 3* -> ack
     })
     vars P P' : Prin
     vars R R' : Rand
@@ -130,8 +141,8 @@ mod! BASIS-KNOWLEDGE-SET {
     -- 
     vars KL KL' : BasisKL
     var KLS : BasisKLSet
-    var P : Prin
-    var R : Rand
+    vars P P2 : Prin
+    vars R R2 : Rand
     -- 
     eq (KL \in empty) = false .
     eq (KL \in (KL' KLS)) = (prin(KL) = prin(KL') and rand(KL) = rand(KL') and 
@@ -147,6 +158,9 @@ mod! BASIS-KNOWLEDGE-SET {
     -- lemmas
     op b-lm1 : BasisKLSet Prin Rand -> Bool
     eq b-lm1(KLS,P,R) = hasBasis(KLS,P,R) implies not(basis(KLS,P,R) = errB) .
+    -- 
+    op b-lm2 : BasisKLSet Prin Rand Prin Rand -> Bool
+    eq b-lm2(KLS,P,R,P2,R2) = (P = P2 and R = R2) implies (hasBasis(KLS,P,R) = hasBasis(KLS,P2,R2)) .
 }
 
 mod! ACK-KNOWLEDGE-SET {
@@ -352,4 +366,8 @@ mod INV {
     op inv2 : Sys Prin Prin Rand -> Bool
     eq inv2(S,P,Q,R) = (isComplete(S,P,Q,R) and sameBasis(S,P,Q,R) and not(evePresent(S,R)))
                        implies sameKey(S,P,Q,R) .
+
+    -- 
+    op inv3 : Sys Prin Rand -> Bool
+    eq inv3(S,P,R) = hasAck(acks(S),P,R) implies (hasKey(keys(S),P,R) and hasBasis(bases(S),P,R)) .
 }
