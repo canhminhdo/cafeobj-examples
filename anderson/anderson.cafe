@@ -1,0 +1,96 @@
+-- Loop: Remainder Section
+--  rs: place[i] = fetch&incmode(next,N);
+--  ws: repeat until array[place[i]];
+--    Critical Section
+--  cs: array[place[i]],array[(place[i]+1) % N] = false,true;
+
+-- in ./snat
+in ../snat
+
+mod* ANDERSON {
+  pr(LABEL + PID + SIMPLE-NAT)
+  [Sys]
+-- any initial state
+  op init : -> Sys {constr}
+  
+-- transitions
+  op want : Sys Pid -> Sys {constr}
+  op try  : Sys Pid -> Sys {constr}
+  op exit : Sys Pid -> Sys {constr}
+
+-- observations
+  op pc : Sys Pid -> Label
+  op next : Sys -> SNat .
+  op place : Sys Pid -> SNat .
+  op array : Sys SNat -> Bool .
+  op count : Sys -> SNat .
+
+  var S : Sys
+  vars P Q : Pid
+  vars I J : SNat
+
+  op N : -> SNzNat
+  -- suppose N > 1 .
+  eq (1 < N) = true .
+
+-- for any initial state
+  eq pc(init,P) = rs .
+  eq next(init) = 0 .
+  eq place(init,P) = 0 .
+  eq array(init,I) = (if I = 0 then true else false fi) .
+  eq count(init) = 0 .
+
+-- want
+  op c-want : Sys Pid -> Bool
+  eq c-want(S,P) = (pc(S,P) = rs and count(S) < N) .
+  ceq pc(want(S,P),Q) = (if P = Q then ws else pc(S,Q) fi) if c-want(S,P) .
+  ceq place(want(S,P),Q) = (if P = Q then next(S) else place(S,Q) fi) if c-want(S,P) .
+  ceq next(want(S,P)) = (s(next(S)) rem N) if c-want(S,P) .
+  eq array(want(S,P),I) = array(S,I) .
+  ceq count(want(S,P)) = s(count(S)) if c-want(S,P) .
+  ceq want(S,P) = S if c-want(S,P) = false .
+  
+-- try
+  op c-try : Sys Pid -> Bool 
+  eq c-try(S,P) = (pc(S,P) = ws and array(S,place(S,P)) = true) .
+  ceq pc(try(S,P),Q) = (if P = Q then cs else pc(S,Q) fi) if c-try(S,P) .
+  eq place(try(S,P),Q) = place(S,Q) .
+  eq array(try(S,P),I) = array(S,I) .
+  eq next(try(S,P)) = next(S) .
+  eq count(try(S,P)) = count(S) .
+  ceq try(S,P) = S if c-try(S,P) = false .
+
+-- exit
+  op c-exit : Sys Pid -> Bool
+  eq c-exit(S,P) = (pc(S,P) = cs) .
+  ceq pc(exit(S,P),Q) = (if P = Q then rs else pc(S,Q) fi) if c-exit(S,P) .
+  eq place(exit(S,P),Q) = place(S,Q) .
+  eq next(exit(S,P)) = next(S) .
+  ceq array(exit(S,P),I) = (
+    if I = s(place(S,P)) rem N then
+      true
+    else (
+      if I = place(S,P) then 
+        false 
+      else
+        array(S,I) 
+      fi ) 
+    fi ) if c-exit(S,P) .
+  ceq count(exit(S,P)) = (sd(count(S),1)) if c-exit(S,P) .
+  ceq exit(S,P) = S if c-exit(S,P) = false .
+}
+
+mod ADS-INV {
+  pr(ANDERSON)
+
+-- invariants
+  op mutex : Sys Pid Pid -> Bool
+  op inv0 : Sys -> Bool
+
+  var S : Sys .
+  vars P Q : Pid .
+
+  eq mutex(S,P,Q) = (pc(S,P) = cs and pc(S,Q) = cs implies (P = Q)) .
+
+  eq inv0(S) = (N < count(S)) = false .
+}

@@ -1,0 +1,246 @@
+-- Loop: Remainder Section
+--  rs: place[i] = fetch&incmode(next,N);
+--  ws: repeat until array[place[i]];
+--    Critical Section
+--  cs: array[place[i]],array[(place[i]+1) % N] = false,true;
+
+mod! LABEL {
+  [Label]
+  ops rs ws cs : -> Label {constr}
+  eq (rs = ws) = false .
+  eq (rs = cs) = false .
+  eq (ws = cs) = false .
+}
+
+mod! PID {
+  [Pid]
+}
+
+view TRIV2PID from TRIV to PID {
+    sort Elt -> Pid,
+}
+
+mod* SIMPLE-NAT {
+  [ SZero SNzNat < SNat ]
+  [ SOne < SNzNat ]
+  op 0 : -> SZero {constr}
+  op s : SNat -> SNzNat {constr}
+  vars I J G H : SNat
+  vars K K1 : SNzNat
+  eq (0 = K) = false .
+  eq (0 = s(I)) = false .
+  eq (I = s(I)) = false .
+  eq (s(I) = s(J)) = (I = J) .
+  eq s(I) + J = s(I + J) .
+
+  pred _<_ : SNat SNat .
+  eq (I < 0) = false .
+  eq (0 < K) = true .
+  eq (I < s(I)) = true .
+  eq (I < I) = false .
+  ceq (s(I) < J) = false if (I < J) = false .
+
+  op _ + _ : SNat SNat -> SNat {comm assoc}
+  op _ rem _ : SNat SNzNat -> SNat
+  op sd : SNat SNat -> SNat 
+  op 1 : -> SOne {constr} 
+  
+  eq s(0) = 1 .
+  eq sd(I, 0) = I .
+  eq sd(s(I), 1) = I .
+  eq sd(s(I), s(J)) = sd(I, J) .
+  eq (I rem 1) = 0 .
+  eq (0 rem K) = 0 .
+  eq (K rem K) = 0 .
+  ceq (I = (s(I) rem K)) = false if 1 < K .
+  eq 0 + I = I .
+  eq 1 + I = s(I) .
+  eq (J + (I rem K)) rem K = (I + J) rem K .
+  eq ((I + K) rem K) = (I rem K) .
+  ceq (I rem K) = I if I < K .
+  eq ((I rem K) < K) = true .
+
+  ceq (I < sd(J,1)) = false if (I < J) = false .
+  ceq (I < s(J)) = false if (J < I) .
+  eq s(I) + sd(J,1) = I + J .
+  eq (s(I rem K) rem K) = (s(I) rem K) .
+  eq s(sd(J,1) + I) = J + I .
+  ceq ((I + J) rem K = I) = false if 0 < J and J < K .
+
+  op lemma1 : SNat SNat -> Bool .
+  eq lemma1(I,J) = ((J < I) = false and (J = I) = false) implies I < J .
+  ceq (I + sd(J,1) < G) = false if G < I + J and 0 < J .
+  ceq (s(I + J) rem K = I) = false if s(J) < K . 
+  ceq (s(I + J) < G) = false if (s(I) < G) = false .
+
+}
+
+mod! SET(X :: TRIV) {
+    pr (SIMPLE-NAT)
+    [Elt.X < Set]
+
+    op emp : -> Set {constr} .
+    op _ _ : Set Set -> Set {constr assoc comm idem id: emp} .
+
+    vars E F : Elt.X .
+    vars S S' : Set .
+    var C : SNat .
+
+    op insert : Elt.X Set -> Set .
+    op delete : Elt.X Set -> Set .
+    op # : Set -> SNat .
+    op _\in_ : Elt Set -> Bool .
+    op _-_ : Set Set -> Set .
+
+    eq insert (E, S) = S E .
+
+    eq delete (E, emp) = emp .
+    eq delete (E, (E S)) = delete (E, S) .
+    eq delete (E, (F S)) = F delete (E, S) .
+
+    eq #(emp) = 0 .
+    eq #(E S) = s(#(S)) .
+
+    eq E \in emp = false .
+    eq E \in (E S) = true .
+    eq E \in (F S) = E \in S .
+
+    eq S - emp = S .
+    eq S - (E S') = delete(E, S) - S' .
+
+    -- invariant
+    op inv12 : Set Elt.X -> Bool .
+    eq inv12(S,E) = E \in S implies 0 < #(S) .
+
+    -- lemmas
+    ceq #(delete(E,S)) = sd(#(S),1) if E \in S .
+    eq (E \in delete(E,S)) = false .
+    ceq E \in delete(F,S) = E \in S if (E = F) = false .
+}
+
+
+mod* ANDERSON {
+  pr (LABEL + PID + SIMPLE-NAT)
+  pr (SET (X <= TRIV2PID) * {sort Set -> SetPids})
+  [Sys]
+-- any initial state
+  op init : -> Sys {constr}
+  
+-- transitions
+  op want : Sys Pid -> Sys {constr}
+  op try : Sys Pid -> Sys {constr}
+  op exit : Sys Pid -> Sys {constr}
+
+-- observations
+  op pc : Sys Pid -> Label
+  op next : Sys -> SNat .
+  op place : Sys Pid -> SNat .
+  op array : Sys SNat -> Bool .
+  op count : Sys -> SNat .
+  op psInWsCs : Sys -> SetPids . --  a set of processses in ws or cs
+
+-- CafeOBJ variables
+  var S : Sys
+  vars I J : Pid
+  vars N M : SNat
+  op No : -> SNzNat
+  -- suppose No > 1 .
+  eq (1 < No) = true .
+
+-- for any initial state
+  eq pc(init,I) = rs .
+  eq next(init) = 0 .
+  eq place(init,I) = 0 .
+  eq array(init,N) = (if N = 0 then true else false fi) .
+  eq count(init) = 0 .
+  eq psInWsCs(init) = emp .
+
+-- for want rs -> ws
+  op c-want : Sys Pid -> Bool
+  eq c-want(S,I) = (pc(S,I) = rs and count(S) < No) .
+  ceq pc(want(S,I),J) = (if I = J then ws else pc(S,J) fi) if c-want(S,I) .
+  ceq place(want(S,I),J) = (if I = J then next(S) else place(S,J) fi) if c-want(S,I) .
+  ceq next(want(S,I)) = (s(next(S)) rem No) if c-want(S,I) .
+  eq array(want(S,I),N) = array(S,N) .
+  ceq count(want(S,I)) = s(count(S)) if c-want(S,I) .
+  ceq psInWsCs(want(S,I)) = insert(I, psInWsCs(S)) if c-want(S,I) .
+  ceq want(S,I) = S if c-want(S,I) = false .
+  
+-- for try
+  op c-try : Sys Pid -> Bool 
+  eq c-try(S,I) = (pc(S,I) = ws and array(S,place(S,I)) = true) .
+  ceq pc(try(S,I),J) = (if I = J then cs else pc(S,J) fi) if c-try(S,I) .
+  eq place(try(S,I),J) = place(S,J) .
+  eq array(try(S,I),N) = array(S,N) .
+  eq next(try(S,I)) = next(S) .
+  eq count(try(S,I)) = count(S) .
+  eq psInWsCs(try(S,I)) = psInWsCs(S) .
+  ceq try(S,I) = S if c-try(S,I) = false .
+
+-- for exit
+  op c-exit : Sys Pid -> Bool
+  eq c-exit(S,I) = (pc(S,I) = cs) .
+  ceq pc(exit(S,I),J) = (if I = J then rs else pc(S,J) fi) if c-exit(S,I) .
+  eq place(exit(S,I),J) = place(S,J) .
+  eq next(exit(S,I)) = next(S) .
+  ceq array(exit(S,I),M) = (
+    if M = (s(place(S,I)) rem No) then
+      true
+    else (
+      if M = place(S,I) then 
+        false 
+      else
+        array(S,M) 
+      fi ) 
+    fi ) if c-exit(S,I) .
+  ceq count(exit(S,I)) = (sd(count(S),1)) if c-exit(S,I) .
+  ceq psInWsCs(exit(S,I)) = delete(I, psInWsCs(S)) if c-exit(S,I) .
+  ceq exit(S,I) = S if c-exit(S,I) = false .
+}
+
+mod* INV {
+  pr(ANDERSON)
+
+-- invariants
+  op mutex : Sys Pid Pid -> Bool
+  op inv1 : Sys Pid Pid -> Bool
+  op inv2 : Sys Pid -> Bool
+  op inv3 : Sys SNat SNat -> Bool
+  op inv4 : Sys Pid Pid -> Bool
+  op inv5 : Sys Pid SNat -> Bool
+  op inv6 : Sys Pid -> Bool
+  op inv7 : Sys Pid -> Bool
+  op inv8 : Sys SNat -> Bool
+  op inv9 : Sys -> Bool
+  op inv10 : Sys -> Bool .
+  op inv11 : Sys Pid -> Bool .
+
+
+  var S : Sys .
+  vars P Q R T : Pid .
+  vars G H : SNat .
+  vars I J K : SNat .
+
+  eq mutex(S,P,Q) = (pc(S,P) = cs and pc(S,Q) = cs implies (P = Q)) .
+
+  eq inv1(S,P,Q) = ((pc(S,P) = ws and array(S,place(S,P)) = true and (P = Q) = false) implies 
+      (pc(S,Q) = cs or (pc(S,Q) = ws and array(S,place(S,Q)) = true)) = false) .
+
+  eq inv2(S,P) = ((pc(S,P) = cs) implies (array(S,place(S,P)) = true)) .
+  eq inv3(S,G,H) = (((G = H) = false and array(S,G) = true) implies (array(S,H) = false)) . 
+  
+  eq inv8(S,I) = (array(S,I) = true implies next(S) = (I + count(S)) rem No) .
+
+  eq inv4(S,P,Q) = ((P = Q) = false and place(S,P) = place(S,Q) and (pc(S,P) = rs) = false) implies (pc(S,Q) = rs) .
+
+  eq inv5(S,P,I) = (place(S,P) = ((I + next(S)) rem No) and pc(S,P) = ws) 
+    implies ((I + count(S)) < No) = false .
+
+  eq inv6(S,P) = (place(S,P) < No) .
+  eq inv7(S,P) = (pc(S,P) = ws or pc(S,P) = cs) implies (0 < count(S)) .
+  eq inv9(S) = (next(S) < No) .
+
+  eq inv10(S) = #(psInWsCs(S)) = count(S) .
+  eq inv11(S,P) = (pc(S,P) = ws or pc(S,P) = cs) implies P \in psInWsCs(S) .
+
+}
