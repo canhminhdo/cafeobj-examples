@@ -1,0 +1,93 @@
+mod! LABEL {
+  [Label]
+  ops rs ws cs : -> Label {constr}
+  eq (rs = ws) = false .
+  eq (rs = cs) = false .
+  eq (ws = cs) = false .
+}
+
+mod* PID {
+  [Pid]
+}
+
+mod* SIMPLE-NAT {
+  [ SZero SNzNat < SNat ]
+  [ SOne < SNzNat ]
+  op 0 : -> SZero {constr}
+  op s : SNat -> SNzNat {constr}
+  vars I J G H : SNat
+  var K : SNzNat
+  eq (0 = K) = false .
+  eq (0 = s(I)) = false .
+  eq (I = s(I)) = false .
+
+  pred _<_ : SNat SNat .
+  eq (I < 0) = false .
+  eq (0 < K) = true .
+  eq (I < s(I)) = true .
+  eq (I < s(s(I))) = true .
+  eq (I < I) = false .
+  ceq (I < s(J)) = true if I < J .
+  ceq (s(I) < J) = false if (I < J) = false .
+  eq (s(I) = s(J)) = (I = J) .
+  ceq (I < s(0)) = false if (I = 0) = false .
+  ceq (I < s(J)) = false if (I = J) = false and (I < J) = false .
+  ceq (s(I) < s(J)) = true if I < J . 
+  ceq (I = J) = true if ((I < J) = false and (J < I) = false) .
+  ceq (I < s(J)) = true if (J < I) = false .
+  ceq ((I + G) < (I + H)) = false if (G < H) = false .
+  ceq ((I + G) < (I + H)) = true if (G < H) .
+
+  -- for v1
+  op _ + _ : SNat SNat -> SNat {comm assoc}
+  op _ rem _ : SNat SNzNat -> SNat
+  op sd : SNat SNat -> SNat 
+  op 1 : -> SOne {constr} 
+  
+  eq s(0) = 1 .
+  eq sd(I, 0) = I .
+  eq sd(s(I), 1) = I .
+  eq sd(s(I), s(J)) = sd(I, J) .
+  eq (I rem 1) = 0 .
+  eq (0 rem K) = 0 .
+  eq (K rem K) = 0 .
+  eq (J + (I rem K)) rem K = (I + J) rem K .
+  ceq (I = (s(I) rem K)) = false if 1 < K .
+  ceq ((I rem K) = (s(I) rem K)) = false if 1 < K .
+  eq (s(I rem K) rem K) = (s(I) rem K) .
+  ceq ((I rem K) = (J rem K)) = false if I < (J + K) and J < I .
+  eq 0 + I = I .
+  eq 1 + I = s(I) .
+  eq s(I) + J = s(I + J) .
+  eq s(I + sd(J,1)) = I + J .
+  eq (sd(I,1) = I) = false .
+  eq (I + J = I + G) = (J = G) .
+
+  -- for inv9
+  ceq (I < sd(J,1)) = false if (I < J) = false .
+  ceq (I < s(J)) = false if (J < I) .
+
+  -- for simulation
+  ceq (s(I) < s(J)) = false if (I < J) = false .
+  ceq (I < K) = false if (I = 0) = false and (I rem K) = 0 . 
+  ceq ((I rem K) = (s(J) rem K)) = false if I < s(J + K) and s(J) < I .
+  op lemma1 : SNat SNat -> Bool .
+  eq lemma1(I,J) = ((I = J) = false and (J < I) = false) implies (I < J) .
+  eq ((K + I) rem K) = (I rem K) .
+  ceq ((I + J) = s(J)) = false if 1 < I .
+  ceq (s(J) < (I + J)) = true if 1 < I .
+  ceq (I = (J + sd(I,1))) = false if (1 < J and 0 < I) .
+  op lemma2 : SNat SNat SNat SNat -> Bool .
+  eq lemma2(I,J,G,H) = ((I = s(J)) = false and G = (J + H) and 0 < H) implies 
+      (G = (I + sd(H,1))) = false .
+  ceq ((I + sd(G,1)) < J + G) = true if (I < J and 0 < G) .
+  ceq ((I + J) = (G + sd(J,1))) = false if ((G = s(I)) = false and 0 < J) .
+  op lemma3 : SNat SNat -> Bool .
+  eq lemma3(I,J) = ((s(I) < J) implies (I < J)) .
+  ceq ((I + sd(G,1)) < (J + G)) = false if ((I < J) = false and (I = J) = false and 0 < G) .
+  ceq ((I + J) < (G + H)) = true if (I < s(H) and (I = H) = false and (G < J) = false) .
+
+
+  -- new
+  ceq ((I + J) rem K = (I + sd(J,1)) rem K) = false if 1 < K .
+}
